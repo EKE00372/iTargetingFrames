@@ -1,5 +1,7 @@
 local L = LibStub('AceLocale-3.0'):NewLocale('iTargetingFrames', 'zhCN', true, 'raw')
 
+L.to = '到'
+L.from = '来自'
 L.global = '全局'
 L.globalFont = '全局字体'
 L.globalTexture = '全局材质'

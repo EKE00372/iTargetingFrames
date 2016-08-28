@@ -684,9 +684,94 @@ function iTF:print(...)
 		print('iTF: ' .. msg)
 	end
 end
+local function utf8_charbytes (s, i)
+   -- argument defaults
+   i = i or 1
+   local c = string.byte(s, i)
+   
+   -- determine bytes needed for character, based on RFC 3629
+   if c > 0 and c <= 127 then
+      -- UTF8-1
+      return 1
+   elseif c >= 194 and c <= 223 then
+      -- UTF8-2
+      local c2 = string.byte(s, i + 1)
+      return 2
+   elseif c >= 224 and c <= 239 then
+      -- UTF8-3
+      local c2 = s:byte(i + 1)
+      local c3 = s:byte(i + 2)
+      return 3
+   elseif c >= 240 and c <= 244 then
+      -- UTF8-4
+      local c2 = s:byte(i + 1)
+      local c3 = s:byte(i + 2)
+      local c4 = s:byte(i + 3)
+      return 4
+   end
+end
+local function utf8_len (s)
+   local pos = 1
+   local bytes = string.len(s)
+   local len = 0
+   
+   while pos <= bytes and len ~= chars do
+      local c = string.byte(s,pos)
+      len = len + 1
+      
+      pos = pos + utf8_charbytes(s, pos)
+   end
+   
+   if chars ~= nil then
+      return pos - 1
+   end
+   
+   return len
+end
+local function utf8_sub (s, i, j)
+   j = j or -1
+
+   if i == nil then
+      return ""
+   end
+   
+   local pos = 1
+   local bytes = string.len(s)
+   local len = 0
+
+   -- only set l if i or j is negative
+   local l = (i >= 0 and j >= 0) or utf8_len(s)
+   local startChar = (i >= 0) and i or l + i + 1
+   local endChar = (j >= 0) and j or l + j + 1
+
+   -- can't have start before end!
+   if startChar > endChar then
+      return ""
+   end
+   
+   -- byte offsets to pass to string.sub
+   local startByte, endByte = 1, bytes
+   
+   while pos <= bytes do
+      len = len + 1
+      
+      if len == startChar then
+	 startByte = pos
+      end
+      
+      pos = pos + utf8_charbytes(s, pos)
+      
+      if len == endChar then
+	 endByte = pos - 1
+	 break
+      end
+   end
+   
+   return string.sub(s, startByte, endByte)
+end
 function iTF:trimText(unitID)
 	while iTF.frames[unitID].text:GetWidth() > iTFConfig.layout.frame.width do
-		iTF.frames[unitID].text:SetText(string.sub(iTF.frames[unitID].text:GetText(), 1, -2))
+		iTF.frames[unitID].text:SetText(utf8_sub(iTF.frames[unitID].text:GetText(), 1, -2))
 	end
 end
 function iTF:abbreviate(str)
@@ -694,7 +779,7 @@ function iTF:abbreviate(str)
 	if #t > 1 then
 		str = t[#t]
 		for i = #t-1, 1, -1 do
-			str = string.format('%s. %s', t[i]:sub(1,1), str)
+			str = string.format('%s. %s', utf8_sub(t[i],1,1), str)
 		end
 	end
 	return str
@@ -715,6 +800,17 @@ function iTF:setName(unitID, setIt)
 	end
 	iTF.frames[unitID].text:SetText(name)
 	iTF:trimText(unitID)
+end
+function iTF:testMode(start)
+	if start then
+		iTF.configMode = true
+		--iTF:registerEvents(true)
+		--iTF:updateNameplateStateDrivers(true,true)
+	else
+		iTF.configMode = false
+		--iTF:registerEvents()
+		--iTF:updateNameplateStateDrivers(true,false)
+	end
 end
 function iTF:updateHealth(unitID)
 	if iTF.frames[unitID] then
@@ -881,7 +977,9 @@ function iTF:updateCast(unitID,channel)
 		else
 			iTF.frames[unitID].text:SetTextColor(unpack(iTFConfig.layout.colors.text.cast))
 		end
-		iTF.frames[unitID].healthBar:SetHeight(iTFConfig.layout.frame.height-1-iTFConfig.layout.frame.castBarHeight)
+		if not iTFConfig.layout.castBar.detached then
+			iTF.frames[unitID].healthBar:SetHeight(iTFConfig.layout.frame.height-1-iTFConfig.layout.frame.castBarHeight)
+		end
 		iTF.frames[unitID].castBar:Show()
 		--iTF.frames[unitID].castBar:SetMinMaxValues(startTime/1000, endTime/1000)
 		local starttime = startTime/1000
@@ -892,8 +990,6 @@ function iTF:updateCast(unitID,channel)
 		end)
 	else
 		if UnitExists(unitID) then
-			--iTF.frames[unitID].text:SetText(UnitName(unitID))
-			--iTF:trimText(unitID)
 			iTF:setName(unitID)
 			iTF.frames[unitID].text:SetTextColor(unpack(iTFConfig.layout.colors.text.main))
 		end
@@ -1049,10 +1145,10 @@ function iTF:updateRaidIcon(unitID)
 end
 function iTF:updateUnitID(unitID)
 	iTF:hideAll(unitID)
-	iTF.frames[unitID].unitName = UnitName(unitID) or nil
-	iTF.frames[unitID].guid = UnitGUID(unitID)
+	iTF.frames[unitID].unitName = UnitName(unitID) or UNKNOWN
+	iTF.frames[unitID].guid = UnitGUID(unitID) or '0'
 	local unitType, _, serverID, instanceID, zoneID, npcID, spawnID = strsplit("-", iTF.frames[unitID].guid)
-	iTF.frames[unitID].npcID = npcID or nil
+	iTF.frames[unitID].npcID = npcID or 0
 	iTF.frames[unitID].waitingFor = {
 		['border'] = {},
 		['alpha'] = {},
@@ -1143,14 +1239,26 @@ function iTF:CreateNew(unitID, i)
 	--Cast Bar
 	iTF.frames[unitID].castBar = CreateFrame('StatusBar', nil,iTF.frames[unitID])
 	iTF.frames[unitID].castBar:SetStatusBarTexture(iTFConfig.layout.castBar.texture)
-	iTF.frames[unitID].castBar:SetWidth(iTFConfig.layout.frame.width)
-	iTF.frames[unitID].castBar:SetHeight(iTFConfig.layout.frame.castBarHeight)
-	iTF.frames[unitID].castBar:SetPoint('TOPLEFT', iTF.frames[unitID], 'TOPLEFT', 1,-1)
+
+	if iTFConfig.layout.castBar.detached then
+		iTF.frames[unitID].castBar:SetWidth(iTFConfig.layout.castBar.detached_width)
+		iTF.frames[unitID].castBar:SetHeight(iTFConfig.layout.castBar.detached_height)
+		iTF.frames[unitID].castBar:SetPoint(iTFConfig.layout.castBar.detached_pos, iTF.frames[unitID], iTFConfig.layout.castBar.detached_pos, iTFConfig.layout.castBar.detached_x,iTFConfig.layout.castBar.detached_y)
+		-- Create fontstring for detached cast bar
+		iTF.frames[unitID].castBarText = iTF.frames[unitID].castBar:CreateFontString()
+		iTF.frames[unitID].castBarText:SetFont(iTFConfig.layout.castBar.detached_text_font, iTFConfig.layout.castBar.detached_text_size, iTFConfig.layout.castBar.detached_text_flags)
+		iTF.frames[unitID].castBarText:SetPoint(iTFConfig.layout.castBar.detached_text_pos, iTF.frames[unitID].castBar, iTFConfig.layout.castBar.detached_text_pos, iTFConfig.layout.castBar.detached_text_x,iTFConfig.layout.castBar.detached_text_y)
+		iTF.frames[unitID].castBarText:SetText('')
+		iTF.frames[unitID].castBarText:Hide()
+	else
+		iTF.frames[unitID].castBar:SetWidth(iTFConfig.layout.frame.width)
+		iTF.frames[unitID].castBar:SetHeight(iTFConfig.layout.frame.castBarHeight)
+		iTF.frames[unitID].castBar:SetPoint('TOPLEFT', iTF.frames[unitID], 'TOPLEFT', 1,-1)
+	end
 	iTF.frames[unitID].castBar:SetStatusBarColor(unpack(iTFConfig.layout.colors.statusbar.cast))
 	iTF.frames[unitID].castBar:SetMinMaxValues(0,1)
 	iTF.frames[unitID].castBar:SetValue(0)
 	iTF.frames[unitID].castBar:Hide()
-	
 	--Glow
 	iTF.frames[unitID].topFrame = CreateFrame('frame', nil, iTF.frames[unitID]) -- anchor frame
 	iTF.frames[unitID].topFrame:SetAllPoints(iTF.frames[unitID])
@@ -1228,6 +1336,9 @@ function iTF:CreateNew(unitID, i)
 	iTF.frames[unitID]:Hide()
 	iTF.frames[unitID]:HookScript('OnShow',function()
 		iTF.frames[unitID].isShown = true
+		if iTF.frames[unitID].added and (GetTime() - iTF.frames[unitID].added > 0.1) and not iTF.configMode then
+			iTF:updateUnitID(unitID)
+		end
 	end)
 	iTF.frames[unitID]:HookScript('OnHide', function()
 		iTF.frames[unitID].isPlayer = nil
@@ -1249,10 +1360,8 @@ function iTF:OnUpdate(elapsed)
 					end
 				end
 				if showTime < iTFConfig.layout.icon.durationDecimals then
-					--showTime = string.format('%.1f', showTime)
 					iTF.frames[unitID].auras[id].cooldownText:SetFormattedText('%.1f', showTime)
 				else
-					--showTime = string.format('%.0f', showTime)
 					iTF.frames[unitID].auras[id].cooldownText:SetFormattedText('%.0f', showTime)
 				end
 			end
@@ -1261,19 +1370,11 @@ function iTF:OnUpdate(elapsed)
 	if onUpdateTotal >= 0.2 then
 		for k,v in pairs(iTF.frames) do
 			if UnitExists(k) then
-				if v.guid ~= UnitGUID(k) then
-					--iTF:updateUnitID(k)
-				--elseif not iTF.frames[k].isMe then
-				else
+				if v.isShown then
 					for cond,_ in pairs(conditionals.onUpdate) do
 						updateIndicator(k, cond)
 					end
-				--else
-					--iTF:hideAll(k)
-				--	iTF.frames[k]:SetAlpha(1)
 				end
-			--elseif iTF.frames[k].isMe then
-				--iTF.frames[k]:SetAlpha(1)
 			end
 		end
 		onUpdateTotal = 0
@@ -1289,7 +1390,6 @@ function iTF:updateFrames(toUpdate)
 		for k,v in pairs(iTF.frames) do
 			local posX, posY = iTF:getUFPos(v.nameplateID)
 			if UnitExists(k) then
-				--iTF.frames[k].text:SetText(UnitName(k))
 				iTF:setName(k)
 			end
 			--iTF:trimText(k)
@@ -1298,8 +1398,10 @@ function iTF:updateFrames(toUpdate)
 			iTF.frames[k]:SetPoint(iTFConfig.layout.grow, iTF.mainFrame, iTFConfig.layout.grow, posX, posY)
 			iTF.frames[k].healthBar:SetWidth(iTFConfig.layout.frame.width)
 			iTF.frames[k].healthBar:SetHeight(iTFConfig.layout.frame.height)
-			iTF.frames[k].castBar:SetWidth(iTFConfig.layout.frame.width)
-			iTF.frames[k].castBar:SetHeight(iTFConfig.layout.frame.castBarHeight)
+			if not iTFConfig.layout.castBar.detached then
+				iTF.frames[k].castBar:SetWidth(iTFConfig.layout.frame.width)
+				iTF.frames[k].castBar:SetHeight(iTFConfig.layout.frame.castBarHeight)
+			end
 			iTF.frames[k].topFrame.glowTop:SetWidth(iTFConfig.layout.frame.width)
 			iTF.frames[k].topFrame.glowBottom:SetWidth(iTFConfig.layout.frame.width)
 			iTF.frames[k].topFrame.glowLeft:SetHeight(iTFConfig.layout.frame.height)
@@ -1307,6 +1409,35 @@ function iTF:updateFrames(toUpdate)
 			i = i + 1
 		end
 		iTF:updateMainFrameAttributes(true)
+	end
+	if not toUpdate or toUpdate == 'castbar' then
+		for k,v in pairs(iTF.frames) do
+			if not iTFConfig.layout.castBar.detached then
+				iTF.frames[k].castBar:ClearAllPoints()
+				iTF.frames[k].castBar:SetPoint('TOPLEFT', iTF.frames[unitID], 'TOPLEFT', 1,-1)
+				iTF.frames[k].castBar:SetWidth(iTFConfig.layout.frame.width)
+				iTF.frames[k].castBar:SetHeight(iTFConfig.layout.frame.castBarHeight)
+				if iTF.frames[k].castBarText then
+					iTF.frames[k].castBarText:SetText('')
+					iTF.frames[k].castBarText:Hide()
+				end
+			else
+				if not iTF.frames[k].castBarText then
+					-- Create fontstring for detached cast bar
+					iTF.frames[k].castBarText = iTF.frames[k].castBar:CreateFontString()
+					iTF.frames[k].castBarText:SetFont(iTFConfig.layout.castBar.detached_text_font, iTFConfig.layout.castBar.detached_text_size, iTFConfig.layout.castBar.detached_text_flags)
+					iTF.frames[k].castBarText:SetPoint(iTFConfig.layout.castBar.detached_text_pos, iTF.frames[k].castBar, iTFConfig.layout.castBar.detached_text_pos, iTFConfig.layout.castBar.detached_text_x,iTFConfig.layout.castBar.detached_text_y)
+					iTF.frames[k].castBarText:SetText('')
+					if not v.isShown then
+						iTF.frames[k].castBarText:Hide()
+					end
+				end
+				iTF.frames[k].castBar:ClearAllPoints()
+				iTF.frames[k].castBar:SetWidth(iTFConfig.layout.castBar.detached_width)
+				iTF.frames[k].castBar:SetHeight(iTFConfig.layout.castBar.detached_height)
+				iTF.frames[k].castBar:SetPoint(iTFConfig.layout.castBar.detached_pos, iTF.frames[k], iTFConfig.layout.castBar.detached_pos, iTFConfig.layout.castBar.detached_x,iTFConfig.layout.castBar.detached_y)
+			end
+		end
 	end
 	if not toUpdate or toUpdate == 'border' then
 		--iTF.UFbd.edgeSize = iTFConfig.layout.frame.borderSize
@@ -1660,34 +1791,53 @@ function iTF:updateMainFrameAttributes(newMax)
 		]])
 	end			
 end
-function iTF:updateNameplateStateDrivers(update)
-	local conds = ''
-	if iTFConfig.layout.onlyShowInCombat then
-		conds = ',combat'
-	end
-	if iTFConfig.layout.onlyEnemies then
-		conds = conds .. ',harm'
-	end
-	for i = 1, 40 do
-		if not update then
-		iTF:CreateNew('nameplate' .. i,i)
-		end
-		RegisterStateDriver(iTF.mainFrame, 'itf'..i, '[@nameplate'..i..', exists'..conds..'] true;')
-		iTF.mainFrame:SetAttribute('_onstate-itf'..i,[=[
-		local f = self:GetFrameRef(stateid)
-		if newstate == 'true' then
-			iTFCurrentlyAlive[stateid] = 0
-		else
-			if iTFCurrentlyAlive[stateid] and iTFCurrentlyAlive[stateid] > 0 then
-				iTFCurrentlyShowing[iTFCurrentlyAlive[stateid]] = nil
-				f:Hide()
+function iTF:updateNameplateStateDrivers(update, configMode)
+	if configMode then
+		for i = 1, 40 do
+			RegisterStateDriver(iTF.mainFrame, 'itf'..i, '[@nameplate'..i..', exists] true;true')
+			iTF.mainFrame:SetAttribute('_onstate-itf'..i,[=[
+			local f = self:GetFrameRef(stateid)
+			if newstate == 'true' then
+				iTFCurrentlyAlive[stateid] = 0
+			else
+				if iTFCurrentlyAlive[stateid] and iTFCurrentlyAlive[stateid] > 0 then
+					iTFCurrentlyShowing[iTFCurrentlyAlive[stateid]] = nil
+					f:Hide()
+				end
+				iTFCurrentlyAlive[stateid] = nil
 			end
-			iTFCurrentlyAlive[stateid] = nil
+			self:RunAttribute('_itfupdate')
+			]=])
 		end
-		self:RunAttribute('_itfupdate')
-		]=])
-		if not update then
-			iTF.mainFrame:SetFrameRef('itf' .. i, iTF.frames['nameplate' .. i])
+	else
+		local conds = ''
+		if iTFConfig.layout.onlyShowInCombat then
+			conds = ',combat'
+		end
+		if iTFConfig.layout.onlyEnemies then
+			conds = conds .. ',harm'
+		end
+		for i = 1, 40 do
+			if not update then
+			iTF:CreateNew('nameplate' .. i,i)
+			end
+			RegisterStateDriver(iTF.mainFrame, 'itf'..i, '[@nameplate'..i..', exists'..conds..'] true;')
+			iTF.mainFrame:SetAttribute('_onstate-itf'..i,[=[
+			local f = self:GetFrameRef(stateid)
+			if newstate == 'true' then
+				iTFCurrentlyAlive[stateid] = 0
+			else
+				if iTFCurrentlyAlive[stateid] and iTFCurrentlyAlive[stateid] > 0 then
+					iTFCurrentlyShowing[iTFCurrentlyAlive[stateid]] = nil
+					f:Hide()
+				end
+				iTFCurrentlyAlive[stateid] = nil
+			end
+			self:RunAttribute('_itfupdate')
+			]=])
+			if not update then
+				iTF.mainFrame:SetFrameRef('itf' .. i, iTF.frames['nameplate' .. i])
+			end
 		end
 	end
 end
@@ -1706,6 +1856,18 @@ function iTF:CreateMainFrame()
 	iTF:updateMainFrameAttributes()
 	iTF:updateNameplateStateDrivers()
 	iTF.mainFrame:SetScript('OnUpdate', iTF.OnUpdate)
+end
+function iTF:registerEvents(unregister)
+	local events = {'UNIT_HEALTH','UNIT_HEALTH_FREQUENT','UNIT_SPELLCAST_START','UNIT_SPELLCAST_STOP','UNIT_SPELLCAST_INTERRUPTED','UNIT_SPELLCAST_CHANNEL_START','UNIT_SPELLCAST_CHANNEL_STOP','UNIT_AURA','ENCOUNTER_START','ENCOUNTER_STOP','RAID_TARGET_UPDATE','PLAYER_LOGIN','PLAYER_TARGET_CHANGED','UNIT_THREAT_LIST_UPDATE','PLAYER_FOCUS_CHANGED','PLAYER_REGEN_DISABLED', 'NAME_PLATE_UNIT_ADDED', 'NAME_PLATE_UNIT_REMOVED', 'CHAT_MSG_ADDON'}
+	if unregister then
+		for i = 1, #events do
+			addon:UnregisterEvent(events[i])
+		end
+	else
+		for i = 1, #events do
+			addon:RegisterEvent(events[i])
+		end
+	end
 end
 function addon:ADDON_LOADED(addonName)
 	if addonName == 'iTargetingFrames' then
@@ -1743,11 +1905,7 @@ function addon:ADDON_LOADED(addonName)
 		if iTFConfig.layout.healthText.percentage then
 			iTF.healthTextString = iTF.healthTextString .. '%%'
 		end
-		
-		local events = {'UNIT_HEALTH','UNIT_HEALTH_FREQUENT','UNIT_SPELLCAST_START','UNIT_SPELLCAST_STOP','UNIT_SPELLCAST_INTERRUPTED','UNIT_SPELLCAST_CHANNEL_START','UNIT_SPELLCAST_CHANNEL_STOP','UNIT_AURA','ENCOUNTER_START','ENCOUNTER_STOP','RAID_TARGET_UPDATE','PLAYER_LOGIN','PLAYER_TARGET_CHANGED','UNIT_THREAT_LIST_UPDATE','PLAYER_FOCUS_CHANGED','PLAYER_REGEN_DISABLED', 'NAME_PLATE_UNIT_ADDED', 'NAME_PLATE_UNIT_REMOVED', 'CHAT_MSG_ADDON'}
-		for i = 1, #events do
-			addon:RegisterEvent(events[i])
-		end
+		iTF:registerEvents()
 		addon:RegisterUnitEvent('PLAYER_SPECIALIZATION_CHANGED', 'player')
 		RegisterAddonMessagePrefix('iTargetingFrames')
 	end
@@ -1885,6 +2043,7 @@ function addon:PLAYER_REGEN_DISABLED()
 end
 function addon:NAME_PLATE_UNIT_ADDED(unitID)
 	if iTF.frames[unitID] then
+		iTF.frames[unitID].added = GetTime()
 		iTF:updateUnitID(unitID)
 	end
 end

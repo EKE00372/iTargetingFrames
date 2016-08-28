@@ -975,32 +975,6 @@ function optionFuncs.getOptions()
 								return unpack(iTFConfig.layout.colors.text.main)
 							end,
 						},
-						castColor = {
-							name = L.castColor,
-							type = 'color',
-							order = 6,
-							hasAlpha = true,
-							set = function(r,g,b,a)
-								iTFConfig.layout.colors.text.cast = {r,g,b,a}
-								iTF:updateFrames('text')
-							end,
-							get = function()
-								return unpack(iTFConfig.layout.colors.text.cast)
-							end,
-						},
-						immuneColor = {
-							name = L.nonInterruptibleCastColor,
-							type = 'color',
-							order = 7,
-							hasAlpha = true,
-							set = function(r,g,b,a)
-								iTFConfig.layout.colors.text.immune = {r,g,b,a}
-								iTF:updateFrames('text')
-							end,
-							get = function()
-								return unpack(iTFConfig.layout.colors.text.immune)
-							end,
-						},
 						font = {
 							name = L.font,
 							type = 'scrollSelect',
@@ -1194,11 +1168,24 @@ function optionFuncs.getOptions()
 					name = L.castBar,
 					order = 3,
 					args = {
+						enabled = {
+							name = L.enable,
+							type = 'toggle',
+							order = 1,
+							updateOnClick = true,
+							set = function(val) iTFConfig.layout.castBar.enabled = val end,
+							get = function() return iTFConfig.layout.castBar.enabled end
+						},
 						height = {
 							name = L.height,
 							desc = 'Cast bar height',
 							type = 'slider',
-							order = 1,
+							show = function()
+								if iTFConfig.layout.castBar.enabled and not iTFConfig.layout.castBar.detached then
+									return true
+								end
+							end,
+							order = 4,
 							min = 0,
 							max = 300,
 							step = 1,
@@ -1207,15 +1194,44 @@ function optionFuncs.getOptions()
 								iTF:updateFrames('size')
 							end,
 							get = function() return iTFConfig.layout.frame.castBarHeight end
+						},						
+						castColor = {
+							name = L.castColor,
+							type = 'color',
+							order = 2,
+							hasAlpha = true,
+							show = function() return iTFConfig.layout.castBar.enabled end,
+							set = function(r,g,b,a)
+								iTFConfig.layout.colors.text.cast = {r,g,b,a}
+								iTF:updateFrames('text')
+							end,
+							get = function()
+								return unpack(iTFConfig.layout.colors.text.cast)
+							end,
+						},
+						immuneColor = {
+							name = L.nonInterruptibleCastColor,
+							type = 'color',
+							order = 3,
+							hasAlpha = true,
+							show = function() return iTFConfig.layout.castBar.enabled end,
+							set = function(r,g,b,a)
+								iTFConfig.layout.colors.text.immune = {r,g,b,a}
+								iTF:updateFrames('text')
+							end,
+							get = function()
+								return unpack(iTFConfig.layout.colors.text.immune)
+							end,
 						},
 						color = {
 							name = L.barColor,
 							type = 'color',
-							order = 2,
+							order = 3,
 							hasAlpha = true,
+							show = function() return iTFConfig.layout.castBar.enabled end,
 							set = function(r,g,b,a)
 								iTFConfig.layout.colors.statusbar.cast = {r,g,b,a}
-								iTF:updateFrames('castBarColor')
+								iTF:updateFrames('castbar')
 							end,
 							get = function()
 								return unpack(iTFConfig.layout.colors.statusbar.cast)
@@ -1224,7 +1240,8 @@ function optionFuncs.getOptions()
 						texture = {
 							name = L.castBarTexture,
 							type = 'scrollSelect',
-							order = 3,
+							order = 4,
+							show = function() return iTFConfig.layout.castBar.enabled end,
 							set = function(val)
 								iTFConfig.layout.castBar.texture = LibStub('LibSharedMedia-3.0'):Fetch('statusbar', val)
 								iTF:updateFrames('statusbar')
@@ -1239,6 +1256,178 @@ function optionFuncs.getOptions()
 								end
 							end,
 							values = LibStub('LibSharedMedia-3.0'):List('statusbar'),
+						},
+						detached = {
+							name = L.detached,
+							type = 'toggle',
+							order = 3,
+							updateOnClick = true,
+							show = function() return iTFConfig.layout.castBar.enabled end,
+							set = function(val) 
+								iTFConfig.layout.castBar.detached = val
+								iTF:updateFrames('castbar')
+							end,
+							get = function() return iTFConfig.layout.castBar.detached end
+						},
+						detached_pos = {
+							name = L.pos,
+							type = 'select',
+							order = 5,
+							show = function() return iTFConfig.layout.castBar.detached end,
+							values = optionFuncs.getValues('all'),
+							set = function(val)
+								iTFConfig.layout.castBar.detached_pos = val
+								iTF:updateFrames('castbar')
+							end,
+							get = function() return iTFConfig.layout.castBar.detached_pos end
+						},
+						detached_width = {
+							name = L.width,
+							type = 'slider',
+							order = 6,
+							min = 5,
+							max = 300,
+							step = 1,
+							show = function() return iTFConfig.layout.castBar.detached end,
+							set = function(val)
+								iTFConfig.layout.castBar.detached_width = val
+								iTF:updateFrames('castbar')
+							end,
+							get = function() return iTFConfig.layout.castBar.detached_width end
+						},
+						detached_height = {
+							name = L.height,
+							type = 'slider',
+							order = 6,
+							show = function() return iTFConfig.layout.castBar.detached end,
+							min = 5,
+							max = 300,
+							step = 1,
+							set = function(val)
+								iTFConfig.layout.castBar.detached_height = val
+								iTF:updateFrames('castbar')
+							end,
+							get = function() return iTFConfig.layout.castBar.detached_height end
+						},
+						detached_xPos = {
+							name = L.horizontalPos,
+							type = 'slider',
+							order = 7,
+							min = 5,
+							max = 300,
+							step = 1,
+							show = function() return iTFConfig.layout.castBar.detached end,
+							set = function(val)
+								iTFConfig.layout.castBar.detached_x = val
+								iTF:updateFrames('castbar')
+							end,
+							get = function() return iTFConfig.layout.castBar.detached_x end
+							},
+						detached_yPos = {
+							name = L.verticalPos,
+							type = 'slider',
+							order = 8,
+							min = 5,
+							max = 300,
+							step = 1,
+							show = function() return iTFConfig.layout.castBar.detached end,
+							set = function(val)
+								iTFConfig.layout.castBar.detached_y = val
+								iTF:updateFrames('castbar')
+							end,
+							get = function() return iTFConfig.layout.castBar.detached_y end
+						},
+						text_size = {
+							name = L.size,
+							desc = 'Font size',
+							type = 'slider',
+							order = 9,
+							min = 6,
+							max = 60,
+							step = 1,
+							show = function() return iTFConfig.layout.castBar.detached end,
+							set = function(val)
+								iTFConfig.layout.castBar.detached_text_size = val
+								iTF:updateFrames('castbar')
+							end,
+							get = function() return iTFConfig.layout.castBar.detached_text_size end
+						},
+						text_position = {
+							name = L.textPos,
+							type = 'select',
+							order = 10,
+							show = function() return iTFConfig.layout.castBar.detached end,
+							values = optionFuncs.getValues('all'),
+							set = function(val)
+								iTFConfig.layout.castBar.detached_text_pos = val
+								iTF:updateFrames('castbar')
+							end,
+							get = function() return iTFConfig.layout.castBar.detached_text_pos end
+						},
+						text_horizontal = {
+							name = L.horizontalPos,
+							type = 'slider',
+							order = 11,
+							min = -150,
+							max = 150,
+							step = 1,
+							show = function() return iTFConfig.layout.castBar.detached end,
+							set = function(val)
+								iTFConfig.layout.castBar.detached_text_x = val
+								iTF:updateFrames('castbar')
+							end,
+							get = function() return iTFConfig.layout.castBar.detached_text_x end
+						},
+						text_vertical = {
+							name = L.verticalPos,
+							type = 'slider',
+							order = 12,
+							min = -150,
+							max = 150,
+							step = 1,
+							show = function() return iTFConfig.layout.castBar.detached end,
+							set = function(val)
+								iTFConfig.layout.castBar.detached_text_y = val
+								iTF:updateFrames('castbar')
+							end,
+							get = function() return iTFConfig.layout.castBar.detached_text_y end
+						},
+						font = {
+							name = L.font,
+							type = 'scrollSelect',
+							order = 13,
+							font = true,
+							set = function(val)
+								iTFConfig.layout.castBar.detached_text_font = LibStub('LibSharedMedia-3.0'):Fetch('font', val)
+								iTF:updateFrames('castbar')
+							end,
+							invertValue = true,
+							show = function() return iTFConfig.layout.castBar.detached end,
+							get = function()
+								local fonts = LibStub('LibSharedMedia-3.0'):HashTable('font')
+								for k,v in pairs(fonts) do
+									if v == iTFConfig.layout.castBar.detached_text_font then
+										return k
+									end
+								end
+							end,
+							values = LibStub('LibSharedMedia-3.0'):List('font'),
+						},
+						textFlags = {
+							name = L.textFlags,
+							type = 'select',
+							order = 14,
+							show = function() return iTFConfig.layout.castBar.detached end,
+							values = optionFuncs.getValues('textFlags'),
+							set = function(val)
+								if val == 'NONE' then
+									iTFConfig.layout.castBar.detached_text_flags = nil
+								else
+									iTFConfig.layout.castBar.detached_text_flags = val
+								end
+								iTF:updateFrames('castbar')
+							end,
+							get = function() return iTFConfig.layout.castBar.detached_text_flags or 'NONE' end
 						},
 					},
 				},
@@ -1968,6 +2157,13 @@ function iTF:toggleConfig(forceHide)
 		f:SetPoint('CENTER', UIParent, 'CENTER', 0,0)
 		f:SetMovable(true)
 		f:SetFrameStrata('HIGH')
+		iTF:testMode(true)
+		f:SetScript('OnShow', function()
+			iTF:testMode(true)
+		end)
+		f:SetScript('OnHide', function()
+			iTF:testMode()
+		end)
 		--Title
 		f.title = CreateFrame('frame', nil, f)
 		f.title:SetSize(width, 20)
@@ -2414,457 +2610,462 @@ function iTF:toggleConfig(forceHide)
 				f.contentSlider:SetMinMaxValues(0, math.max(size-height+3,0))
 			end
 			for k,v in spairs(t.args,function(t,a,b) return t[b].order > t[a].order end) do
-				argCount = argCount + 1
-				getFrame('anchor', true, nil, argCount)
-				f.content.anchor[argCount]:SetSize(146,60)
-				f.content.anchor[argCount]:SetBackdropColor(0,0,0,0)
-				f.content.anchor[argCount]:SetBackdropBorderColor(0,0,0,0)
-				local name = v.name
-				local id = getFrame(v.type, true)
-				if v.type == 'button' then
-					f.content[v.type][id]:SetSize(100, 20)
-					f.content[v.type][id]:ClearAllPoints()
-					f.content[v.type][id]:SetPoint('CENTER', f.content.anchor[argCount], 'CENTER', 0,0)
-					if v.updateOnClick and v.refreshTree then
-						f.content[v.type][id]:SetScript('OnClick', function()
-							local refresh = v.func()
-							if refresh then
-								optionStuff.loadTree()
+				if not v.show or (v.show and v.show()) then
+					argCount = argCount + 1
+					getFrame('anchor', true, nil, argCount)
+					f.content.anchor[argCount]:SetSize(146,60)
+					f.content.anchor[argCount]:SetBackdropColor(0,0,0,0)
+					f.content.anchor[argCount]:SetBackdropBorderColor(0,0,0,0)
+					local name = v.name
+					local id = getFrame(v.type, true)
+					if v.type == 'button' then
+						f.content[v.type][id]:SetSize(100, 20)
+						f.content[v.type][id]:ClearAllPoints()
+						f.content[v.type][id]:SetPoint('CENTER', f.content.anchor[argCount], 'CENTER', 0,0)
+						if v.updateOnClick and v.refreshTree then
+							f.content[v.type][id]:SetScript('OnClick', function()
+								local refresh = v.func()
+								if refresh then
+									optionStuff.loadTree()
+									fillContent(keys)
+								end
+							end)
+						elseif v.refreshTree then
+							f.content[v.type][id]:SetScript('OnClick', function()
+								local refresh = v.func()
+								if refresh then
+									v.func()
+									optionStuff.loadTree()
+								end
+							end)
+						elseif v.updateOnClick then
+							f.content[v.type][id]:SetScript('OnClick', function()
+								local refresh = v.func()
+								if refresh then
+									fillContent(keys)
+								end
+							end)
+						else
+							f.content[v.type][id]:SetScript('OnClick', v.func)
+						end
+						f.content[v.type][id].inUse = k
+						f.content[v.type][id].text:SetText(v.name)
+						f.content[v.type][id]:Show()
+					elseif v.type == 'slider' then
+						f.content.slider[id]:ClearAllPoints()
+						f.content.slider[id]:SetPoint('CENTER', f.content.anchor[argCount], 'CENTER', 0,0)
+						f.content.slider[id]:SetScript('OnValueChanged', nil)
+						f.content.slider[id]:SetMinMaxValues(v.min,v.max)
+						f.content.slider[id]:SetValue(v.get())
+						f.content.slider[id].editbox:SetNumber(v.get())
+						f.content.slider[id].inUse = k
+						f.content.slider[id]:Show()
+						f.content.slider[id].text:SetText(v.name)
+						f.content.slider[id].editbox:SetScript('OnEnterPressed', function(self)
+							self:ClearFocus()
+							if tonumber(self:GetText()) then
+								f.content.slider[id]:SetValue(tonumber(self:GetText()))
+							else
+								f.content.slider[id]:SetValue(0)
+							end
+						end)
+						f.content.slider[id]:SetScript('OnValueChanged', function(self, value)
+							if v.allowDecimals then
+								value = math.floor((value*v.allowDecimals)+0.5)/v.allowDecimals
+							else
+								value = math.floor(value)
+							end
+							v.set(value)
+							f.content.slider[id].editbox:SetNumber(value)
+						end)
+					elseif v.type == 'toggle' then
+						f.content.toggle[id].text:ClearAllPoints()
+						f.content.toggle[id].text:SetPoint('CENTER', f.content.anchor[argCount], 'CENTER', 9,0)
+						f.content.toggle[id]:SetChecked(v.get())
+						f.content.toggle[id].inUse = k
+						f.content.toggle[id].text:SetText(v.name)
+						f.content.toggle[id]:Show()
+						f.content.toggle[id]:SetScript('OnClick', function(self, button, down)
+							v.set(self:GetChecked())
+							if v.updateOnClick then
 								fillContent(keys)
 							end
 						end)
-					elseif v.refreshTree then
-						f.content[v.type][id]:SetScript('OnClick', function()
-							local refresh = v.func()
-							if refresh then
-								v.func()
-								optionStuff.loadTree()
+					elseif v.type == 'select' then
+						f.content[v.type][id]:ClearAllPoints()
+						f.content[v.type][id]:SetPoint('CENTER', f.content.anchor[argCount], 'CENTER', 0,-5)
+						f.content[v.type][id].title:SetText(v.name)
+						local function setButtonText(str)
+							if v.multiselect then
+								local temp = {}
+								for subK,subV in spairs(v.values) do
+									if type(subV) == 'table' then
+										for subKey, subValue in pairs(subV) do
+											if v.get(subKey) then
+												table.insert(temp, subValue)
+											end
+										end
+									else
+										if v.get(subK) then
+											table.insert(temp,subV)
+										end
+									end
+								end
+								if #temp == 0 and str then
+									f.content.select[id].text:SetText(str)
+								else
+									f.content.select[id].text:SetText(table.concat(temp, ','))
+								end
+							else
+								if t.bindings then
+									f.content[v.type][id].text:SetText(bindingStuff.mode)
+								else
+									if v.invertValue then
+										local valueToFind = v.get()
+										for key,value in pairs(v.values) do
+											if value == valueToFind then
+												f.content[v.type][id].text:SetText(value)
+												return
+											end
+										end
+									else
+										f.content[v.type][id].text:SetText(v.values[v.get()])
+									end
+								end
 							end
-						end)
-					elseif v.updateOnClick then
-						f.content[v.type][id]:SetScript('OnClick', function()
-							local refresh = v.func()
-							if refresh then
-								fillContent(keys)
-							end
-						end)
-					else
-						f.content[v.type][id]:SetScript('OnClick', v.func)
-					end
-					f.content[v.type][id].inUse = k
-					f.content[v.type][id].text:SetText(v.name)
-					f.content[v.type][id]:Show()
-				elseif v.type == 'slider' then
-					f.content.slider[id]:ClearAllPoints()
-					f.content.slider[id]:SetPoint('CENTER', f.content.anchor[argCount], 'CENTER', 0,0)
-					f.content.slider[id]:SetScript('OnValueChanged', nil)
-					f.content.slider[id]:SetMinMaxValues(v.min,v.max)
-					f.content.slider[id]:SetValue(v.get())
-					f.content.slider[id].editbox:SetNumber(v.get())
-					f.content.slider[id].inUse = k
-					f.content.slider[id]:Show()
-					f.content.slider[id].text:SetText(v.name)
-					f.content.slider[id].editbox:SetScript('OnEnterPressed', function(self)
-						self:ClearFocus()
-						if tonumber(self:GetText()) then
-							f.content.slider[id]:SetValue(tonumber(self:GetText()))
-						else
-							f.content.slider[id]:SetValue(0)
 						end
-					end)
-					f.content.slider[id]:SetScript('OnValueChanged', function(self, value)
-						if v.allowDecimals then
-							value = math.floor((value*v.allowDecimals)+0.5)/v.allowDecimals
-						else
-							value = math.floor(value)
-						end
-						v.set(value)
-						f.content.slider[id].editbox:SetNumber(value)
-					end)
-				elseif v.type == 'toggle' then
-					f.content.toggle[id].text:ClearAllPoints()
-					f.content.toggle[id].text:SetPoint('CENTER', f.content.anchor[argCount], 'CENTER', 9,0)
-					f.content.toggle[id]:SetChecked(v.get())
-					f.content.toggle[id].inUse = k
-					f.content.toggle[id].text:SetText(v.name)
-					f.content.toggle[id]:Show()
-					f.content.toggle[id]:SetScript('OnClick', function(self, button, down)
-						v.set(self:GetChecked())
-					end)
-				elseif v.type == 'select' then
-					f.content[v.type][id]:ClearAllPoints()
-					f.content[v.type][id]:SetPoint('CENTER', f.content.anchor[argCount], 'CENTER', 0,-5)
-					f.content[v.type][id].title:SetText(v.name)
-					local function setButtonText(str)
-						if v.multiselect then
-							local temp = {}
+						local function getMenuTable()
+							local t = {}
 							for subK,subV in spairs(v.values) do
 								if type(subV) == 'table' then
-									for subKey, subValue in pairs(subV) do
-										if v.get(subKey) then
-											table.insert(temp, subValue)
-										end
-									end
-								else
-									if v.get(subK) then
-										table.insert(temp,subV)
-									end
-								end
-							end
-							if #temp == 0 and str then
-								f.content.select[id].text:SetText(str)
-							else
-								f.content.select[id].text:SetText(table.concat(temp, ','))
-							end
-						else
-							if t.bindings then
-								f.content[v.type][id].text:SetText(bindingStuff.mode)
-							else
-								if v.invertValue then
-									local valueToFind = v.get()
-									for key,value in pairs(v.values) do
-										if value == valueToFind then
-											f.content[v.type][id].text:SetText(value)
-											return
-										end
-									end
-								else
-									f.content[v.type][id].text:SetText(v.values[v.get()])
-								end
-							end
-						end
-					end
-					local function getMenuTable()
-						local t = {}
-						for subK,subV in spairs(v.values) do
-							if type(subV) == 'table' then
-								local temp = {}
-								temp.text = subK
-								temp.isTitle = true
-								temp.isNotRadio = true
-								temp.disabled = true
-								temp.notCheckable = true
-								temp.notClickable = true
-								table.insert(t,temp)
-								for subKey, subValue in pairs(subV) do
-									temp = {}
-									temp.text = subValue
-									temp.keepShownOnClick = true
+									local temp = {}
+									temp.text = subK
+									temp.isTitle = true
 									temp.isNotRadio = true
-									temp.checked = v.get(subKey)
-									temp.func = function(data,_,_,checked)
-										v.set(subKey,checked)
-										setButtonText(L.all)
+									temp.disabled = true
+									temp.notCheckable = true
+									temp.notClickable = true
+									table.insert(t,temp)
+									for subKey, subValue in pairs(subV) do
+										temp = {}
+										temp.text = subValue
+										temp.keepShownOnClick = true
+										temp.isNotRadio = true
+										temp.checked = v.get(subKey)
+										temp.func = function(data,_,_,checked)
+											v.set(subKey,checked)
+											setButtonText(L.all)
+										end
+										table.insert(t, temp)
+									end
+								else
+									local temp = {}
+									temp.text = subV
+									if not tonumber(k) then
+										temp.value = subK
+									end
+									if v.multiselect then
+										temp.keepShownOnClick = true
+										temp.isNotRadio = true
+										temp.checked = v.get(subK)
+										temp.func = function(data,_,_,checked)
+											v.set(subK,checked)
+											setButtonText()
+										end
+									
+									else
+										temp.arg1 = subV
+										temp.notCheckable = true
+										temp.func = function(data)
+											v.set(data.value, data)
+											f.content.select[id].text:SetText(v.values[data.value])
+											if v.updateOnClick then
+												fillContent(keys)
+											end
+										end
 									end
 									table.insert(t, temp)
 								end
-							else
-								local temp = {}
-								temp.text = subV
-								if not tonumber(k) then
-									temp.value = subK
-								end
-								if v.multiselect then
-									temp.keepShownOnClick = true
-									temp.isNotRadio = true
-									temp.checked = v.get(subK)
-									temp.func = function(data,_,_,checked)
-										v.set(subK,checked)
-										setButtonText()
-									end
+							end
+							table.insert(t, {text = L.close, func = function() CloseDropDownMenus() end, notCheckable = true})
+							return t
+						end
+						f.content[v.type][id]:SetScript('OnClick',function()
+							if UIDROPDOWNMENU_OPEN_MENU then
+								CloseDropDownMenus()
+								return
+							end
+							EasyMenu(getMenuTable(), f.content[v.type][id].menu,f.content[v.type][id], 0 , 0)
+						end)
+						f.content[v.type][id].inUse = k
+						f.content[v.type][id]:Show()
+						setButtonText(v.loadConds and L.all)
+					elseif v.type == 'color' then
+						f.content[v.type][id].text:ClearAllPoints()
+						f.content[v.type][id].text:SetPoint('CENTER', f.content.anchor[argCount], 'CENTER', 9,0)
+						f.content[v.type][id].inUse = k
+						f.content[v.type][id].text:SetText(v.name)
+						f.content[v.type][id]:SetBackdropColor(v.get())
+						f.content[v.type][id]:SetScript('OnClick' , function()
+							local r,g,b,a = v.get()
+							ColorPickerFrame.hasOpacity = true 
+							ColorPickerFrame.opacity = 1-a
+							ColorPickerFrame.previousValues = {r,g,b,a}
+							ColorPickerFrame.func = function()
+									local a = OpacitySliderFrame:GetValue()
+									local r,g,b = ColorPickerFrame:GetColorRGB()
+									a = 1-a
+									f.content[v.type][id]:SetBackdropColor(r,g,b,a)
+									v.set(r,g,b,a)
+							end
+							ColorPickerFrame.opacityFunc = function()
+									local a = OpacitySliderFrame:GetValue()
+									local r,g,b = ColorPickerFrame:GetColorRGB()
+									a = 1-a
+									f.content[v.type][id]:SetBackdropColor(r,g,b,a)
+									v.set(r,g,b,a)
+							end
+							ColorPickerFrame.cancelFunc = function(colors)
+								v.set(unpack(colors))
+								f.content[v.type][id]:SetBackdropColor(unpack(colors))
+							end
+							ColorPickerFrame:SetColorRGB(r,g,b)
+							ColorPickerFrame:Hide() -- Need to run the OnShow handler.
+							ColorPickerFrame:Show()
+						end)
+						f.content[v.type][id]:Show()
+					elseif v.type == 'keybinding' then
+						f.content.button[id]:SetSize(100, 20)
+						f.content.button[id]:ClearAllPoints()
+						f.content.button[id]:SetPoint('CENTER', f.content.anchor[argCount], 'CENTER', 0,-5)
+						local keyMode = false
+						local clickTime = GetTime()
+						local function key(key)
+							clickTime = GetTime()
+							if string.find(key, 'ALT') or string.find(key, 'CTRL') or string.find(key, 'SHIFT') then
+								return
+							end
+							--alt-ctrl-shift-type
+							local toShow = ''
+							local modifier = ''
+							if IsAltKeyDown() then
+								modifier = modifier .. 'ALT-'
+								toShow = toShow .. 'Alt+'
+							end
+							if IsControlKeyDown() then
+								modifier = modifier .. 'CTRL-'
+								toShow = toShow .. 'Ctrl+'
+							end
+							if IsShiftKeyDown() then
+								modifier = modifier .. 'SHIFT-'
+								toShow = toShow .. 'Shift+'
+							end
+							toShow = toShow .. key
+							if key == 'ESCAPE' then
 								
+							else
+								v.set(modifier..key)
+								f.content.button[id].text:SetText(toShow)
+							end
+							
+							showBindingModeWarning(true)
+							f.content.button[id]:EnableKeyboard(false)
+							f.content.button[id]:EnableMouseWheel(false)
+							f.content.button[id]:SetBackdropColor(0.2,0.2,0.2,0.9)
+							keyMode = false
+						end
+						f.content.button[id]:SetScript('OnClick', function()
+							if not keyMode and (GetTime() - clickTime > 0.2)then
+								keyMode = true
+								showBindingModeWarning()
+								f.content.button[id]:SetScript('OnMouseDown', function(self, k) if keyMode then key(k) end end)
+								f.content.button[id]:SetScript('OnMouseWheel', function(self, delta)
+									if delta == -1 then 
+										key('MouseWheelDown')
+									else
+										key('MouseWheelUp')
+									end
+								end)
+								f.content.button[id]:SetScript('OnKeyDown', function(self, k) key(k) end)
+								f.content.button[id]:SetBackdropColor(0.5,0,0,1)
+								f.content.button[id]:EnableKeyboard(true)
+								f.content.button[id]:EnableMouseWheel(true)
+							end
+						end)
+						local bindingText = getFrame('text', true)
+						f.content.text[bindingText]:ClearAllPoints()
+						f.content.text[bindingText]:SetWidth(0)
+						f.content.text[bindingText]:SetPoint('BOTTOM', f.content.button[id], 'TOP', 0,3)
+						f.content.text[bindingText].inUse = k
+						f.content.text[bindingText]:SetText(v.name)
+						f.content.text[bindingText]:Show()
+						f.content.button[id].inUse = k
+						f.content.button[id].text:SetText(bindingStuff.key)
+						f.content.button[id]:Show()
+					elseif v.type == 'scrollSelect' then
+						f.content[v.type][id]:ClearAllPoints()
+						f.content[v.type][id]:SetPoint('CENTER', f.content.anchor[argCount], 'CENTER', 0,-5)
+						f.content[v.type][id].title:SetText(v.name)
+						local function setButtonText()
+							if v.invertValue then
+								local valueToFind = v.get()
+								for key,value in pairs(v.values) do
+									if value == valueToFind then
+										f.content[v.type][id].text:SetText(value)
+										return
+									end
+								end
+							else
+								f.content[v.type][id].text:SetText(v.values[v.get()])
+							end
+						end
+						local i = 0
+						--spairs(spells, function(t,a,b) return t[b].spell > t[a].spell end)
+						for subK,subV in spairs(v.values, function(t,a,b) return t[a] > t[b] end) do
+							i = i + 1 
+							local button = getFrame('scrollSelectChild', true)
+							f.content.scrollSelectChild[button]:ClearAllPoints()
+							f.content.scrollSelectChild[button]:SetParent(f.content[v.type][id].menu)
+							f.content.scrollSelectChild[button]:SetSize(100, 20)
+							f.content.scrollSelectChild[button].text:SetText(subV)
+							if v.font then
+								f.content.scrollSelectChild[button].text:SetFont(LibStub('LibSharedMedia-3.0'):Fetch('font', subV), 12, 'Outline')
+							else
+								f.content.scrollSelectChild[button].text:SetFont(font, 12, 'Outline')
+							end
+							f.content.scrollSelectChild[button]:SetPoint('TOP', f.content[v.type][id].menu, 'BOTTOM', 0,(i-1)*20)					
+							f.content.scrollSelectChild[button].inUse = 'scrollSelect'
+							f.content.scrollSelectChild[button]:SetScript('OnClick', function()
+								if not tonumber(subK) then
+									v.set(subK)
+									f.content[v.type][id].text:SetText(subK)
 								else
-									temp.arg1 = subV
-									temp.notCheckable = true
-									temp.func = function(data)
-										v.set(data.value, data)
-										f.content.select[id].text:SetText(v.values[data.value])
-										if v.updateOnClick then
-											fillContent(keys)
+									v.set(subV)
+									f.content[v.type][id].text:SetText(subV)
+								end
+							end)
+							f.content.scrollSelectChild[button]:Show()
+						end
+						f.content[v.type][id].menu:SetHeight((i-1)*20)
+						f.content[v.type][id].slider:SetMinMaxValues(0, math.max((i-1)*20-200,0))
+						f.content[v.type][id].scrollFrame:Hide()
+						f.content[v.type][id].inUse = k
+						f.content[v.type][id]:Show()
+						setButtonText()
+					elseif v.type == 'input' then
+						f.content[v.type][id]:ClearAllPoints()
+						f.content[v.type][id]:SetText('')
+						if v.size and v.size == 'huge' then
+							if argCount % 3 == 0 then
+								argCount = argCount + 1
+							elseif argCount % 3 == 2 then
+								argCount = argCount + 2
+							end
+							getFrame('anchor', true, nil, argCount+2)
+							f.content[v.type][id]:SetSize(433, 15)
+							local count = argCount
+							f.content[v.type][id]:SetPoint('TOPLEFT', f.content.anchor[argCount], 'TOPLEFT', 2,0)
+							f.content[v.type][id]:SetMultiLine(true)
+							f.content[v.type][id]:SetText(v.get())
+							f.content[v.type][id]:SetScript('OnSizeChanged', function(self, width, height)
+								f.content.anchor[count]:SetHeight(height + 20)
+								f.content.anchor[count+1]:SetHeight(height + 20)
+								f.content.anchor[count+2]:SetHeight(height + 20)
+								resizeScrollFrame()
+							end)
+							f.content.anchor[argCount]:SetHeight(f.content[v.type][id]:GetHeight() + 20)
+							if v.code then
+								local function getFunc(str)
+									local f, err = loadstring('return ' .. str .. ' ', 'nameplate1')
+									if f then return f() else return f, err end
+								end
+								local okButton = getFrame('button', true)
+								f.content.button[okButton]:ClearAllPoints()
+								f.content.button[okButton]:SetSize(100, 20)
+								f.content.button[okButton].text:SetText(L.ok)
+								f.content.button[okButton]:SetPoint('BOTTOMLEFT', f.content.anchor[argCount], 'BOTTOMLEFT', 2,-1)
+								f.content.button[okButton].inUse = 'editbox'
+								f.content.button[okButton]:SetScript('OnClick', function()
+									if v.edit then
+										local func, e = getFunc(f.content[v.type][id]:GetText())
+										if e then
+											iTF:print(L.errorCustomCode)
+										else
+											f.content[v.type][id]:ClearFocus()
+											v.set(f.content[v.type][id]:GetText())
+										end
+									else
+										if isCustomOK.func then
+											customCondTemp.func = f.content[v.type][id]:GetText()
+											f.content[v.type][id]:ClearFocus()
+										else
+											iTF:print(L.errorCustomCode)
 										end
 									end
-								end
-								table.insert(t, temp)
-							end
-						end
-						table.insert(t, {text = L.close, func = function() CloseDropDownMenus() end, notCheckable = true})
-						return t
-					end
-					f.content[v.type][id]:SetScript('OnClick',function()
-						if UIDROPDOWNMENU_OPEN_MENU then
-							CloseDropDownMenus()
-							return
-						end
-						EasyMenu(getMenuTable(), f.content[v.type][id].menu,f.content[v.type][id], 0 , 0)
-					end)
-					f.content[v.type][id].inUse = k
-					f.content[v.type][id]:Show()
-					setButtonText(v.loadConds and L.all)
-				elseif v.type == 'color' then
-					f.content[v.type][id].text:ClearAllPoints()
-					f.content[v.type][id].text:SetPoint('CENTER', f.content.anchor[argCount], 'CENTER', 9,0)
-					f.content[v.type][id].inUse = k
-					f.content[v.type][id].text:SetText(v.name)
-					f.content[v.type][id]:SetBackdropColor(v.get())
-					f.content[v.type][id]:SetScript('OnClick' , function()
-						local r,g,b,a = v.get()
-						ColorPickerFrame.hasOpacity = true 
-						ColorPickerFrame.opacity = 1-a
-						ColorPickerFrame.previousValues = {r,g,b,a}
-						ColorPickerFrame.func = function()
-								local a = OpacitySliderFrame:GetValue()
-								local r,g,b = ColorPickerFrame:GetColorRGB()
-								a = 1-a
-								f.content[v.type][id]:SetBackdropColor(r,g,b,a)
-								v.set(r,g,b,a)
-						end
-						ColorPickerFrame.opacityFunc = function()
-								local a = OpacitySliderFrame:GetValue()
-								local r,g,b = ColorPickerFrame:GetColorRGB()
-								a = 1-a
-								f.content[v.type][id]:SetBackdropColor(r,g,b,a)
-								v.set(r,g,b,a)
-						end
-						ColorPickerFrame.cancelFunc = function(colors)
-							v.set(unpack(colors))
-							f.content[v.type][id]:SetBackdropColor(unpack(colors))
-						end
-						ColorPickerFrame:SetColorRGB(r,g,b)
-						ColorPickerFrame:Hide() -- Need to run the OnShow handler.
-						ColorPickerFrame:Show()
-					end)
-					f.content[v.type][id]:Show()
-				elseif v.type == 'keybinding' then
-					f.content.button[id]:SetSize(100, 20)
-					f.content.button[id]:ClearAllPoints()
-					f.content.button[id]:SetPoint('CENTER', f.content.anchor[argCount], 'CENTER', 0,-5)
-					local keyMode = false
-					local clickTime = GetTime()
-					local function key(key)
-						clickTime = GetTime()
-						if string.find(key, 'ALT') or string.find(key, 'CTRL') or string.find(key, 'SHIFT') then
-							return
-						end
-						--alt-ctrl-shift-type
-						local toShow = ''
-						local modifier = ''
-						if IsAltKeyDown() then
-							modifier = modifier .. 'ALT-'
-							toShow = toShow .. 'Alt+'
-						end
-						if IsControlKeyDown() then
-							modifier = modifier .. 'CTRL-'
-							toShow = toShow .. 'Ctrl+'
-						end
-						if IsShiftKeyDown() then
-							modifier = modifier .. 'SHIFT-'
-							toShow = toShow .. 'Shift+'
-						end
-						toShow = toShow .. key
-						if key == 'ESCAPE' then
-							
-						else
-							v.set(modifier..key)
-							f.content.button[id].text:SetText(toShow)
-						end
-						
-						showBindingModeWarning(true)
-						f.content.button[id]:EnableKeyboard(false)
-						f.content.button[id]:EnableMouseWheel(false)
-						f.content.button[id]:SetBackdropColor(0.2,0.2,0.2,0.9)
-						keyMode = false
-					end
-					f.content.button[id]:SetScript('OnClick', function()
-						if not keyMode and (GetTime() - clickTime > 0.2)then
-							keyMode = true
-							showBindingModeWarning()
-							f.content.button[id]:SetScript('OnMouseDown', function(self, k) if keyMode then key(k) end end)
-							f.content.button[id]:SetScript('OnMouseWheel', function(self, delta)
-								if delta == -1 then 
-									key('MouseWheelDown')
-								else
-									key('MouseWheelUp')
-								end
-							end)
-							f.content.button[id]:SetScript('OnKeyDown', function(self, k) key(k) end)
-							f.content.button[id]:SetBackdropColor(0.5,0,0,1)
-							f.content.button[id]:EnableKeyboard(true)
-							f.content.button[id]:EnableMouseWheel(true)
-						end
-					end)
-					local bindingText = getFrame('text', true)
-					f.content.text[bindingText]:ClearAllPoints()
-					f.content.text[bindingText]:SetWidth(0)
-					f.content.text[bindingText]:SetPoint('BOTTOM', f.content.button[id], 'TOP', 0,3)
-					f.content.text[bindingText].inUse = k
-					f.content.text[bindingText]:SetText(v.name)
-					f.content.text[bindingText]:Show()
-					f.content.button[id].inUse = k
-					f.content.button[id].text:SetText(bindingStuff.key)
-					f.content.button[id]:Show()
-				elseif v.type == 'scrollSelect' then
-					f.content[v.type][id]:ClearAllPoints()
-					f.content[v.type][id]:SetPoint('CENTER', f.content.anchor[argCount], 'CENTER', 0,-5)
-					f.content[v.type][id].title:SetText(v.name)
-					local function setButtonText()
-						if v.invertValue then
-							local valueToFind = v.get()
-							for key,value in pairs(v.values) do
-								if value == valueToFind then
-									f.content[v.type][id].text:SetText(value)
-									return
-								end
-							end
-						else
-							f.content[v.type][id].text:SetText(v.values[v.get()])
-						end
-					end
-					local i = 0
-					--spairs(spells, function(t,a,b) return t[b].spell > t[a].spell end)
-					for subK,subV in spairs(v.values, function(t,a,b) return t[a] > t[b] end) do
-						i = i + 1 
-						local button = getFrame('scrollSelectChild', true)
-						f.content.scrollSelectChild[button]:ClearAllPoints()
-						f.content.scrollSelectChild[button]:SetParent(f.content[v.type][id].menu)
-						f.content.scrollSelectChild[button]:SetSize(100, 20)
-						f.content.scrollSelectChild[button].text:SetText(subV)
-						if v.font then
-							f.content.scrollSelectChild[button].text:SetFont(LibStub('LibSharedMedia-3.0'):Fetch('font', subV), 12, 'Outline')
-						else
-							f.content.scrollSelectChild[button].text:SetFont(font, 12, 'Outline')
-						end
-						f.content.scrollSelectChild[button]:SetPoint('TOP', f.content[v.type][id].menu, 'BOTTOM', 0,(i-1)*20)					
-						f.content.scrollSelectChild[button].inUse = 'scrollSelect'
-						f.content.scrollSelectChild[button]:SetScript('OnClick', function()
-							if not tonumber(subK) then
-								v.set(subK)
-								f.content[v.type][id].text:SetText(subK)
-							else
-								v.set(subV)
-								f.content[v.type][id].text:SetText(subV)
-							end
-						end)
-						f.content.scrollSelectChild[button]:Show()
-					end
-					f.content[v.type][id].menu:SetHeight((i-1)*20)
-					f.content[v.type][id].slider:SetMinMaxValues(0, math.max((i-1)*20-200,0))
-					f.content[v.type][id].scrollFrame:Hide()
-					f.content[v.type][id].inUse = k
-					f.content[v.type][id]:Show()
-					setButtonText()
-				elseif v.type == 'input' then
-					f.content[v.type][id]:ClearAllPoints()
-					f.content[v.type][id]:SetText('')
-					if v.size and v.size == 'huge' then
-						if argCount % 3 == 0 then
-							argCount = argCount + 1
-						elseif argCount % 3 == 2 then
-							argCount = argCount + 2
-						end
-						getFrame('anchor', true, nil, argCount+2)
-						f.content[v.type][id]:SetSize(433, 15)
-						local count = argCount
-						f.content[v.type][id]:SetPoint('TOPLEFT', f.content.anchor[argCount], 'TOPLEFT', 2,0)
-						f.content[v.type][id]:SetMultiLine(true)
-						f.content[v.type][id]:SetText(v.get())
-						f.content[v.type][id]:SetScript('OnSizeChanged', function(self, width, height)
-							f.content.anchor[count]:SetHeight(height + 20)
-							f.content.anchor[count+1]:SetHeight(height + 20)
-							f.content.anchor[count+2]:SetHeight(height + 20)
-							resizeScrollFrame()
-						end)
-						f.content.anchor[argCount]:SetHeight(f.content[v.type][id]:GetHeight() + 20)
-						if v.code then
-							local function getFunc(str)
-								local f, err = loadstring('return ' .. str .. ' ', 'nameplate1')
-								if f then return f() else return f, err end
-							end
-							local okButton = getFrame('button', true)
-							f.content.button[okButton]:ClearAllPoints()
-							f.content.button[okButton]:SetSize(100, 20)
-							f.content.button[okButton].text:SetText(L.ok)
-							f.content.button[okButton]:SetPoint('BOTTOMLEFT', f.content.anchor[argCount], 'BOTTOMLEFT', 2,-1)
-							f.content.button[okButton].inUse = 'editbox'
-							f.content.button[okButton]:SetScript('OnClick', function()
-								if v.edit then
-									local func, e = getFunc(f.content[v.type][id]:GetText())
-									if e then
-										iTF:print(L.errorCustomCode)
-									else
-										f.content[v.type][id]:ClearFocus()
-										v.set(f.content[v.type][id]:GetText())
-									end
-								else
-									if isCustomOK.func then
-										customCondTemp.func = f.content[v.type][id]:GetText()
-										f.content[v.type][id]:ClearFocus()
-									else
-										iTF:print(L.errorCustomCode)
-									end
-								end
-							end)
-							f.content.button[okButton]:Show()
+								end)
+								f.content.button[okButton]:Show()
 
-							local errorText = getFrame('text', true)
-							f.content.text[errorText]:ClearAllPoints()
-							f.content.text[errorText]:SetPoint('TOPLEFT',	f.content.button[okButton], 'TOPRIGHT', 2,0)
-							f.content.text[errorText]:SetWidth(331)
-							f.content.text[errorText]:SetHeight(40)
-							f.content.text[errorText]:SetJustifyH('LEFT')
-							f.content.text[errorText]:SetJustifyV('TOP')
-							f.content.text[errorText].inUse = 'customCond'
-							f.content.text[errorText]:SetText('')
-							f.content.text[errorText]:Show()
-							f.content[v.type][id]:SetScript('OnTextChanged', function(self)
-								local func, e = getFunc(self:GetText())
-								if e then
-									f.content.text[errorText]:SetText(e)
-									if not v.edit then
-										isCustomOK.func = false
+								local errorText = getFrame('text', true)
+								f.content.text[errorText]:ClearAllPoints()
+								f.content.text[errorText]:SetPoint('TOPLEFT',	f.content.button[okButton], 'TOPRIGHT', 2,0)
+								f.content.text[errorText]:SetWidth(331)
+								f.content.text[errorText]:SetHeight(40)
+								f.content.text[errorText]:SetJustifyH('LEFT')
+								f.content.text[errorText]:SetJustifyV('TOP')
+								f.content.text[errorText].inUse = 'customCond'
+								f.content.text[errorText]:SetText('')
+								f.content.text[errorText]:Show()
+								f.content[v.type][id]:SetScript('OnTextChanged', function(self)
+									local func, e = getFunc(self:GetText())
+									if e then
+										f.content.text[errorText]:SetText(e)
+										if not v.edit then
+											isCustomOK.func = false
+										end
+									else
+										f.content.text[errorText]:SetText('')
+										if not v.edit then
+											isCustomOK.func = true
+										end
 									end
-								else
-									f.content.text[errorText]:SetText('')
-									if not v.edit then
-										isCustomOK.func = true
-									end
+								end)
+								f.content[v.type][id]:SetScript('OnEnterPressed', nil)
+							else
+								f.content[v.type][id]:SetScript('OnTextChanged', nil)
+							end
+						else
+							if v.onCharUpdate then
+								f.content[v.type][id]:SetScript('OnTextChanged', function(self)
+									v.set(self:GetText())
+								end)
+							else
+								f.content[v.type][id]:SetScript('OnTextChanged', nil)
+							end
+							f.content[v.type][id]:SetSize(100, 20)
+							f.content[v.type][id]:SetPoint('CENTER', f.content.anchor[argCount], 'CENTER', 0,-5)
+							f.content[v.type][id]:SetMultiLine(false)
+							f.content[v.type][id]:SetText(v.get())
+							f.content[v.type][id]:SetScript('OnEnterPressed', function(self)
+								v.set(self:GetText())
+								self:ClearFocus()
+								if v.updateOnClick then
+									self:SetText('')
+									fillContent(keys)
 								end
 							end)
-							f.content[v.type][id]:SetScript('OnEnterPressed', nil)
-						else
-							f.content[v.type][id]:SetScript('OnTextChanged', nil)
 						end
+						f.content[v.type][id].inUse = k
+						f.content[v.type][id].text:SetText(v.name)
+						f.content[v.type][id]:Show()
 					else
-						if v.onCharUpdate then
-							f.content[v.type][id]:SetScript('OnTextChanged', function(self)
-								v.set(self:GetText())
-							end)
-						else
-							f.content[v.type][id]:SetScript('OnTextChanged', nil)
-						end
-						f.content[v.type][id]:SetSize(100, 20)
-						f.content[v.type][id]:SetPoint('CENTER', f.content.anchor[argCount], 'CENTER', 0,-5)
-						f.content[v.type][id]:SetMultiLine(false)
-						f.content[v.type][id]:SetText(v.get())
-						f.content[v.type][id]:SetScript('OnEnterPressed', function(self)
-							v.set(self:GetText())
-							self:ClearFocus()
-							if v.updateOnClick then
-								self:SetText('')
-								fillContent(keys)
-							end
-						end)
+						iTF:print('debug: option type: ',v.type, ', report it.') --DEBUG
 					end
-					f.content[v.type][id].inUse = k
-					f.content[v.type][id].text:SetText(v.name)
-					f.content[v.type][id]:Show()
-				else
-					iTF:print('debug: option type: ',v.type, ', report it.') --DEBUG
-				end
-				f.content.anchor[argCount].inUse = k
-				f.content.anchor[argCount]:Show()
-				if v.size and v.size == 'huge' then
-					argCount = argCount + 2
-					getFrame('anchor', true, nil, argCount)
+					f.content.anchor[argCount].inUse = k
+					f.content.anchor[argCount]:Show()
+					if v.size and v.size == 'huge' then
+						argCount = argCount + 2
+						getFrame('anchor', true, nil, argCount)
+					end
 				end
 			end
 			if t.bindings then -- Use different layout for bindings tab

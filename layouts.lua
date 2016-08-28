@@ -108,6 +108,20 @@ function layouts:Default()
 		},
 		['castBar'] = {
 			['texture'] = 'Interface\\Buttons\\WHITE8x8', --Cast bar texture
+			['enabled'] = true, -- Enable cast bar
+			--['pos'] = 'TOP', -- Cast bar position ('TOP' or 'BOTTOM')
+			['detached'] = false, -- Detach cast bar from health bar
+			['detached_x'] = 0,
+			['detached_y'] = 0,
+			['detached_height'] = 14,
+			['detached_width'] = 83,
+			['detached_pos'] = 'TOPLEFT',
+			['detached_text_pos'] = 'LEFT',
+			['detached_text_x'] = 0,
+			['detached_text_y'] = 0,
+			['detached_text_size'] = 11,
+			['detached_text_font'] = 'Fonts\\ARIALN.TTF',
+			['detached_text_flags'] = 'OUTLINE',
 		},
 		['conditionals'] = {
 			['interruptRange'] = { --Is in interrupt range (check rangeSpells.lua *.i)

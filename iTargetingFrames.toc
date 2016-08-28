@@ -5,7 +5,7 @@
 ## Version: 0.82
 ## DefaultState: enabled
 ## SavedVariables: iTFConfig
-## X-Curse-Packaged-Version: v0.8-8-gaf68d82
+## X-Curse-Packaged-Version: v0.8-9-g8fbaeb2
 ## X-Curse-Project-Name: iTargetingFrames
 ## X-Curse-Project-ID: itargetingframes
 ## X-Curse-Repository-ID: wow/itargetingframes/mainline

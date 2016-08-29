@@ -1,0 +1,13 @@
+Ironi:
+	- Finish writing detachable cast bar Add utf8 support Fix few options Add zhCN and zhTW locales
+	- Options: add global options for Font and Texture
+	- Options: fix health text font selection
+	- add detachable cast bar and stuff
+	- Fix 'Unknown' unit names
+	- Options: add toggle to enable/disable health text Custom conditionals: added new parameter , its a table containing: name (string), guid (string), npcid (number), class (string, classFileName), health (current %, number 0-100). Usage: function(unitID, data) if data.health <35 then..... Code optimizing: Don't update hidden frames Custom conditional templates: Update to use data.x
+	- Options: fix font flag for duration text & stack text Options: add font flag options for Name/Cast text Add health text
+	- Options: added 'Only show in combat' (default: off)
+	- add 'Load For' option to select specs to load custom conditionals for specific classes only add 'Load Template' menu to copy custom conditional template code fix menus not updating without reloading the page
+	- add option for aura spacing (default:1) lower default aura spacing from 2 -> 1 change default width from 80 to 83
+	- add different options to sort debuffs (time/name & ascending/descending
+	- add Drain Soul (198590) to aura blacklist

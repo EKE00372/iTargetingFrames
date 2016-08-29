@@ -769,9 +769,15 @@ local function utf8_sub (s, i, j)
    
    return string.sub(s, startByte, endByte)
 end
-function iTF:trimText(unitID)
-	while iTF.frames[unitID].text:GetWidth() > iTFConfig.layout.frame.width do
-		iTF.frames[unitID].text:SetText(utf8_sub(iTF.frames[unitID].text:GetText(), 1, -2))
+function iTF:trimText(unitID, cast)
+	if cast then
+		while iTF.frames[unitID].castBarText:GetWidth() > iTFConfig.layout.castBar.detached_width do
+			iTF.frames[unitID].castBarText:SetText(utf8_sub(iTF.frames[unitID].castBarText:GetText(), 1, -2))
+		end
+	else
+		while iTF.frames[unitID].text:GetWidth() > iTFConfig.layout.frame.width do
+			iTF.frames[unitID].text:SetText(utf8_sub(iTF.frames[unitID].text:GetText(), 1, -2))
+		end
 	end
 end
 function iTF:abbreviate(str)
@@ -963,6 +969,7 @@ function iTF:updateAuras(unitID)
 	end
 end
 function iTF:updateCast(unitID,channel)
+	if not iTFConfig.layout.castBar.enabled then return end
 	local name, nameSubtext, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible
 	if channel then
 		name, nameSubtext, text, texture, startTime, endTime, isTradeSkill, notInterruptible = UnitChannelInfo(unitID)
@@ -970,15 +977,23 @@ function iTF:updateCast(unitID,channel)
 		name, nameSubtext, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible = UnitCastingInfo(unitID)
 	end
 	if name and not iTF.frames[unitID].isMe then
-		iTF.frames[unitID].text:SetText(name)
-		iTF:trimText(unitID)
-		if notInterruptible then
-			iTF.frames[unitID].text:SetTextColor(unpack(iTFConfig.layout.colors.text.immune))
-		else
-			iTF.frames[unitID].text:SetTextColor(unpack(iTFConfig.layout.colors.text.cast))
-		end
 		if not iTFConfig.layout.castBar.detached then
 			iTF.frames[unitID].healthBar:SetHeight(iTFConfig.layout.frame.height-1-iTFConfig.layout.frame.castBarHeight)
+			if notInterruptible then
+				iTF.frames[unitID].text:SetTextColor(unpack(iTFConfig.layout.colors.text.immune))
+			else
+				iTF.frames[unitID].text:SetTextColor(unpack(iTFConfig.layout.colors.text.cast))
+			end
+			iTF.frames[unitID].text:SetText(name)
+			iTF:trimText(unitID)
+		else
+			if notInterruptible then
+				iTF.frames[unitID].castBarText:SetTextColor(unpack(iTFConfig.layout.colors.text.immune))
+			else
+				iTF.frames[unitID].castBarText:SetTextColor(unpack(iTFConfig.layout.colors.text.cast))
+			end
+			iTF.frames[unitID].castBarText:SetText(name)
+			iTF:trimText(unitID, true)
 		end
 		iTF.frames[unitID].castBar:Show()
 		--iTF.frames[unitID].castBar:SetMinMaxValues(startTime/1000, endTime/1000)
@@ -1243,18 +1258,21 @@ function iTF:CreateNew(unitID, i)
 	if iTFConfig.layout.castBar.detached then
 		iTF.frames[unitID].castBar:SetWidth(iTFConfig.layout.castBar.detached_width)
 		iTF.frames[unitID].castBar:SetHeight(iTFConfig.layout.castBar.detached_height)
-		iTF.frames[unitID].castBar:SetPoint(iTFConfig.layout.castBar.detached_pos, iTF.frames[unitID], iTFConfig.layout.castBar.detached_pos, iTFConfig.layout.castBar.detached_x,iTFConfig.layout.castBar.detached_y)
+		iTF.frames[unitID].castBar:SetPoint(iTFConfig.layout.castBar.detached_from, iTF.frames[unitID], iTFConfig.layout.castBar.detached_to, iTFConfig.layout.castBar.detached_x,iTFConfig.layout.castBar.detached_y)
+
 		-- Create fontstring for detached cast bar
 		iTF.frames[unitID].castBarText = iTF.frames[unitID].castBar:CreateFontString()
 		iTF.frames[unitID].castBarText:SetFont(iTFConfig.layout.castBar.detached_text_font, iTFConfig.layout.castBar.detached_text_size, iTFConfig.layout.castBar.detached_text_flags)
 		iTF.frames[unitID].castBarText:SetPoint(iTFConfig.layout.castBar.detached_text_pos, iTF.frames[unitID].castBar, iTFConfig.layout.castBar.detached_text_pos, iTFConfig.layout.castBar.detached_text_x,iTFConfig.layout.castBar.detached_text_y)
 		iTF.frames[unitID].castBarText:SetText('')
-		iTF.frames[unitID].castBarText:Hide()
 	else
 		iTF.frames[unitID].castBar:SetWidth(iTFConfig.layout.frame.width)
 		iTF.frames[unitID].castBar:SetHeight(iTFConfig.layout.frame.castBarHeight)
 		iTF.frames[unitID].castBar:SetPoint('TOPLEFT', iTF.frames[unitID], 'TOPLEFT', 1,-1)
 	end
+	iTF.frames[unitID].castBar:SetBackdrop(iTF.UFbd)
+	iTF.frames[unitID].castBar:SetBackdropColor(unpack(iTFConfig.layout.colors.statusbar.backdrop))
+	iTF.frames[unitID].castBar:SetBackdropBorderColor(unpack(iTFConfig.layout.colors.statusbar.border))
 	iTF.frames[unitID].castBar:SetStatusBarColor(unpack(iTFConfig.layout.colors.statusbar.cast))
 	iTF.frames[unitID].castBar:SetMinMaxValues(0,1)
 	iTF.frames[unitID].castBar:SetValue(0)
@@ -1414,9 +1432,9 @@ function iTF:updateFrames(toUpdate)
 		for k,v in pairs(iTF.frames) do
 			if not iTFConfig.layout.castBar.detached then
 				iTF.frames[k].castBar:ClearAllPoints()
-				iTF.frames[k].castBar:SetPoint('TOPLEFT', iTF.frames[unitID], 'TOPLEFT', 1,-1)
 				iTF.frames[k].castBar:SetWidth(iTFConfig.layout.frame.width)
 				iTF.frames[k].castBar:SetHeight(iTFConfig.layout.frame.castBarHeight)
+				iTF.frames[k].castBar:SetPoint('TOPLEFT', iTF.frames[k], 'TOPLEFT', 1,-1)
 				if iTF.frames[k].castBarText then
 					iTF.frames[k].castBarText:SetText('')
 					iTF.frames[k].castBarText:Hide()
@@ -1425,17 +1443,20 @@ function iTF:updateFrames(toUpdate)
 				if not iTF.frames[k].castBarText then
 					-- Create fontstring for detached cast bar
 					iTF.frames[k].castBarText = iTF.frames[k].castBar:CreateFontString()
-					iTF.frames[k].castBarText:SetFont(iTFConfig.layout.castBar.detached_text_font, iTFConfig.layout.castBar.detached_text_size, iTFConfig.layout.castBar.detached_text_flags)
-					iTF.frames[k].castBarText:SetPoint(iTFConfig.layout.castBar.detached_text_pos, iTF.frames[k].castBar, iTFConfig.layout.castBar.detached_text_pos, iTFConfig.layout.castBar.detached_text_x,iTFConfig.layout.castBar.detached_text_y)
-					iTF.frames[k].castBarText:SetText('')
-					if not v.isShown then
-						iTF.frames[k].castBarText:Hide()
-					end
+				end
+				iTF.frames[k].castBarText:ClearAllPoints()
+				iTF.frames[k].castBarText:SetFont(iTFConfig.layout.castBar.detached_text_font, iTFConfig.layout.castBar.detached_text_size, iTFConfig.layout.castBar.detached_text_flags)
+				iTF.frames[k].castBarText:SetPoint(iTFConfig.layout.castBar.detached_text_pos, iTF.frames[k].castBar, iTFConfig.layout.castBar.detached_text_pos, iTFConfig.layout.castBar.detached_text_x,iTFConfig.layout.castBar.detached_text_y)
+				iTF.frames[k].castBarText:SetText('')
+				if not v.isShown then
+					iTF.frames[k].castBarText:Hide()
+				else
+					iTF.frames[k].castBarText:Show()
 				end
 				iTF.frames[k].castBar:ClearAllPoints()
 				iTF.frames[k].castBar:SetWidth(iTFConfig.layout.castBar.detached_width)
 				iTF.frames[k].castBar:SetHeight(iTFConfig.layout.castBar.detached_height)
-				iTF.frames[k].castBar:SetPoint(iTFConfig.layout.castBar.detached_pos, iTF.frames[k], iTFConfig.layout.castBar.detached_pos, iTFConfig.layout.castBar.detached_x,iTFConfig.layout.castBar.detached_y)
+				iTF.frames[k].castBar:SetPoint(iTFConfig.layout.castBar.detached_from, iTF.frames[k], iTFConfig.layout.castBar.detached_to, iTFConfig.layout.castBar.detached_x,iTFConfig.layout.castBar.detached_y)
 			end
 		end
 	end
@@ -1520,6 +1541,8 @@ function iTF:updateFrames(toUpdate)
 		for k in pairs(iTF.frames) do
 			iTF.frames[k]:SetBackdropColor(unpack(iTFConfig.layout.colors.statusbar.backdrop))
 			iTF.frames[k]:SetBackdropBorderColor(unpack(iTFConfig.layout.colors.statusbar.border))
+			iTF.frames[k].castBar:SetBackdropColor(unpack(iTFConfig.layout.colors.statusbar.backdrop))
+			iTF.frames[k].castBar:SetBackdropBorderColor(unpack(iTFConfig.layout.colors.statusbar.border))
 		end
 	end
 	if not toUpdate or toUpdate == 'castBarColor' then

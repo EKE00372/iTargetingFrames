@@ -1,7 +1,5 @@
-local L = LibStub('AceLocale-3.0'):NewLocale('iTargetingFrames', 'zhTW', true, 'raw')
-
-L.to = '到'
-L.from = '來自'
+local L = LibStub('AceLocale-3.0'):NewLocale('iTargetingFrames', 'zhTW')
+if not L then return end
 L.global = '全局'
 L.globalFont = '全局字體'
 L.globalTexture = '全局材質'
@@ -149,3 +147,5 @@ L.healthDecimals = '顯示小數'
 L.showPercentage = '顯示"%"符號'
 L.toggleFriendlyUnits = '切換友方目標開啟或關閉'
 L.detached = '獨立施法條'
+L.to = '到'
+L.from = '來自'

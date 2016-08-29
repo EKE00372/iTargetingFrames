@@ -115,7 +115,8 @@ function layouts:Default()
 			['detached_y'] = 0,
 			['detached_height'] = 14,
 			['detached_width'] = 90,
-			['detached_pos'] = 'TOPLEFT',
+			['detached_from'] = 'BOTTOM',
+			['detached_to'] = 'TOP',
 			['detached_text_pos'] = 'LEFT',
 			['detached_text_x'] = 0,
 			['detached_text_y'] = 0,
@@ -126,7 +127,7 @@ function layouts:Default()
 		['conditionals'] = {
 			['interruptRange'] = { --Is in interrupt range (check rangeSpells.lua *.i)
 				['indicators'] = {['border'] = true},
-				['enable'] = true,
+				['enable'] = false,
 				['color'] = {0,1,0,0.6},
 				['weight'] = 100, --Imporantace, higher weight overrides lower
 				['update'] = 'onUpdate', --update func
@@ -141,7 +142,7 @@ function layouts:Default()
 			['outOfCombat'] = { -- NPC is not in combat
 				['indicators'] = {['glowBottom'] = true},
 				['color'] = {0.5,0.5,0.5,0.5},
-				['enable'] = true,
+				['enable'] = false,
 				['weight'] = 10, --Imporantace, higher weight overrides lower
 				['update'] = 'onUpdate', --update func
 			},

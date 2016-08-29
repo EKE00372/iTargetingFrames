@@ -1,7 +1,5 @@
-local L = LibStub('AceLocale-3.0'):NewLocale('iTargetingFrames', 'zhCN', true, 'raw')
-
-L.to = '到'
-L.from = '来自'
+local L = LibStub('AceLocale-3.0'):NewLocale('iTargetingFrames', 'zhCN')
+if not L then return end
 L.global = '全局'
 L.globalFont = '全局字体'
 L.globalTexture = '全局材质'
@@ -149,3 +147,5 @@ L.healthDecimals = '显示小数'
 L.showPercentage = '显示"%"符号'
 L.toggleFriendlyUnits = '切换友方目标开启或关闭'
 L.detached = '独立施法条'
+L.to = '到'
+L.from = '来自'

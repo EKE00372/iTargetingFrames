@@ -731,6 +731,71 @@ local function showBindingModeWarning(hide)
 end
 function optionFuncs.getOptions()
 	local options = {
+		global = {
+			name = L.global,
+			order = 1,
+			args = {
+				font = {
+					name = L.globalFont,
+					type = 'scrollSelect',
+					order = 1,
+					font = true,
+					set = function(val)
+						local font = LibStub('LibSharedMedia-3.0'):Fetch('font', val)
+						iTFConfig.layout.text.font = font
+						iTFConfig.layout.healthText.font = font
+						iTFConfig.layout.castBar.detached_text_font = font	
+						iTFConfig.layout.icon.durationFont = font
+						iTFConfig.layout.icon.stackFont = font
+										
+						iTF:updateFrames('text')
+						iTF:updateFrames('auraText')
+						iTF:updateFrames('castbar')
+						iTF:updateFrames('healthText')
+					end,
+					invertValue = true,
+					get = function()
+						local font = iTFConfig.layout.text.font
+						if (font == iTFConfig.layout.healthText.font) and (font == iTFConfig.layout.castBar.detached_text_font) and (font == iTFConfig.layout.icon.durationFont) and (font == iTFConfig.layout.icon.stackFont) then
+							local fonts = LibStub('LibSharedMedia-3.0'):HashTable('font')
+							for k,v in pairs(fonts) do
+								if v == font then
+									return k
+								end
+							end
+						else
+							return ' '
+						end
+					end,
+					values = LibStub('LibSharedMedia-3.0'):List('font'),
+				},
+				texture = {
+					name = L.globalTexture,
+					type = 'scrollSelect',
+					order = 2,
+					set = function(val)
+						local texture = LibStub('LibSharedMedia-3.0'):Fetch('statusbar', val)
+						iTFConfig.layout.castBar.texture = texture
+						iTFConfig.layout.statusbar.texture = texture
+						iTF:updateFrames('statusbar')
+					end,
+					invertValue = true,
+					get = function()
+						if iTFConfig.layout.castBar.texture == iTFConfig.layout.statusbar.texture then
+							local textures = LibStub('LibSharedMedia-3.0'):HashTable('statusbar')
+							for k,v in pairs(textures) do
+								if v == iTFConfig.layout.statusbar.texture then
+									return k
+								end
+							end
+						else
+							return ' '
+						end
+					end,
+					values = LibStub('LibSharedMedia-3.0'):List('statusbar'),
+				},
+			},
+		},
 		frameOptions = {
 			name = L.frame,
 			order = 2,
@@ -1030,6 +1095,7 @@ function optionFuncs.getOptions()
 							name = L.enable,
 							type = 'toggle',
 							order = 1,
+							updateOnClick = true,
 							set = function(val) 
 								iTFConfig.layout.healthText.enabled = val
 								iTF:updateFrames('healthText')
@@ -1046,6 +1112,7 @@ function optionFuncs.getOptions()
 							min = 6,
 							max = 60,
 							step = 1,
+							show = function() return iTFConfig.layout.healthText.enabled end,
 							set = function(val)
 								iTFConfig.layout.healthText.size = val
 								iTF:updateFrames('healthText')
@@ -1056,6 +1123,7 @@ function optionFuncs.getOptions()
 							name = L.textPos,
 							type = 'select',
 							order = 2,
+							show = function() return iTFConfig.layout.healthText.enabled end,
 							values = optionFuncs.getValues('all'),
 							set = function(val)
 								iTFConfig.layout.healthText.pos = val
@@ -1070,6 +1138,7 @@ function optionFuncs.getOptions()
 							min = -150,
 							max = 150,
 							step = 1,
+							show = function() return iTFConfig.layout.healthText.enabled end,
 							set = function(val)
 								iTFConfig.layout.healthText.x = val
 								iTF:updateFrames('healthText')
@@ -1083,6 +1152,7 @@ function optionFuncs.getOptions()
 							min = -150,
 							max = 150,
 							step = 1,
+							show = function() return iTFConfig.layout.healthText.enabled end,
 							set = function(val)
 								iTFConfig.layout.healthText.y = val
 								iTF:updateFrames('healthText')
@@ -1093,6 +1163,7 @@ function optionFuncs.getOptions()
 							name = L.color,
 							type = 'color',
 							order = 5,
+							show = function() return iTFConfig.layout.healthText.enabled end,
 							hasAlpha = true,
 							set = function(r,g,b,a)
 								iTFConfig.layout.colors.text.healthText = {r,g,b,a}
@@ -1106,6 +1177,7 @@ function optionFuncs.getOptions()
 							name = L.textFlags,
 							type = 'select',
 							order = 8,
+							show = function() return iTFConfig.layout.healthText.enabled end,
 							values = optionFuncs.getValues('textFlags'),
 							set = function(val)
 								if val == 'NONE' then
@@ -1121,9 +1193,10 @@ function optionFuncs.getOptions()
 							name = L.font,
 							type = 'scrollSelect',
 							order = 8,
+							show = function() return iTFConfig.layout.healthText.enabled end,
 							font = true,
 							set = function(val)
-								iTFConfig.layout.text.font = LibStub('LibSharedMedia-3.0'):Fetch('font', val)
+								iTFConfig.layout.healthText.font = LibStub('LibSharedMedia-3.0'):Fetch('font', val)
 								iTF:updateFrames('healthText')
 							end,
 							invertValue = true,
@@ -1141,6 +1214,7 @@ function optionFuncs.getOptions()
 							name = L.healthDecimals,
 							type = 'toggle',
 							order = 9,
+							show = function() return iTFConfig.layout.healthText.enabled end,
 							set = function(val) 
 								iTFConfig.layout.healthText.decimal = val
 								iTF:updateFrames('healthText')
@@ -1153,6 +1227,7 @@ function optionFuncs.getOptions()
 							name = L.showPercentage,
 							type = 'toggle',
 							order = 10,
+							show = function() return iTFConfig.layout.healthText.enabled end,
 							set = function(val)
 								iTFConfig.layout.healthText.percentage = val
 								iTF:updateFrames('healthText')
@@ -1269,17 +1344,29 @@ function optionFuncs.getOptions()
 							end,
 							get = function() return iTFConfig.layout.castBar.detached end
 						},
-						detached_pos = {
-							name = L.pos,
+						detached_fromPoint = {
+							name = L.from,
 							type = 'select',
 							order = 5,
-							show = function() return iTFConfig.layout.castBar.detached end,
+							show = function() return (iTFConfig.layout.castBar.detached and iTFConfig.layout.castBar.enabled)end,
 							values = optionFuncs.getValues('all'),
 							set = function(val)
-								iTFConfig.layout.castBar.detached_pos = val
+								iTFConfig.layout.castBar.detached_from = val
 								iTF:updateFrames('castbar')
 							end,
-							get = function() return iTFConfig.layout.castBar.detached_pos end
+							get = function() return iTFConfig.layout.castBar.detached_from end
+						},
+						detached_toPoint = {
+							name = L.to,
+							type = 'select',
+							order = 5,
+							show = function() return (iTFConfig.layout.castBar.detached and iTFConfig.layout.castBar.enabled)end,
+							values = optionFuncs.getValues('all'),
+							set = function(val)
+								iTFConfig.layout.castBar.detached_to = val
+								iTF:updateFrames('castbar')
+							end,
+							get = function() return iTFConfig.layout.castBar.detached_from end
 						},
 						detached_width = {
 							name = L.width,
@@ -1288,7 +1375,7 @@ function optionFuncs.getOptions()
 							min = 5,
 							max = 300,
 							step = 1,
-							show = function() return iTFConfig.layout.castBar.detached end,
+							show = function() return (iTFConfig.layout.castBar.detached and iTFConfig.layout.castBar.enabled)end,
 							set = function(val)
 								iTFConfig.layout.castBar.detached_width = val
 								iTF:updateFrames('castbar')
@@ -1299,7 +1386,7 @@ function optionFuncs.getOptions()
 							name = L.height,
 							type = 'slider',
 							order = 6,
-							show = function() return iTFConfig.layout.castBar.detached end,
+							show = function() return (iTFConfig.layout.castBar.detached and iTFConfig.layout.castBar.enabled)end,
 							min = 5,
 							max = 300,
 							step = 1,
@@ -1313,10 +1400,10 @@ function optionFuncs.getOptions()
 							name = L.horizontalPos,
 							type = 'slider',
 							order = 7,
-							min = 5,
+							min = -300,
 							max = 300,
 							step = 1,
-							show = function() return iTFConfig.layout.castBar.detached end,
+							show = function() return (iTFConfig.layout.castBar.detached and iTFConfig.layout.castBar.enabled)end,
 							set = function(val)
 								iTFConfig.layout.castBar.detached_x = val
 								iTF:updateFrames('castbar')
@@ -1327,10 +1414,10 @@ function optionFuncs.getOptions()
 							name = L.verticalPos,
 							type = 'slider',
 							order = 8,
-							min = 5,
+							min = -300,
 							max = 300,
 							step = 1,
-							show = function() return iTFConfig.layout.castBar.detached end,
+							show = function() return (iTFConfig.layout.castBar.detached and iTFConfig.layout.castBar.enabled)end,
 							set = function(val)
 								iTFConfig.layout.castBar.detached_y = val
 								iTF:updateFrames('castbar')
@@ -1345,7 +1432,7 @@ function optionFuncs.getOptions()
 							min = 6,
 							max = 60,
 							step = 1,
-							show = function() return iTFConfig.layout.castBar.detached end,
+							show = function() return (iTFConfig.layout.castBar.detached and iTFConfig.layout.castBar.enabled)end,
 							set = function(val)
 								iTFConfig.layout.castBar.detached_text_size = val
 								iTF:updateFrames('castbar')
@@ -1356,7 +1443,7 @@ function optionFuncs.getOptions()
 							name = L.textPos,
 							type = 'select',
 							order = 10,
-							show = function() return iTFConfig.layout.castBar.detached end,
+							show = function() return (iTFConfig.layout.castBar.detached and iTFConfig.layout.castBar.enabled)end,
 							values = optionFuncs.getValues('all'),
 							set = function(val)
 								iTFConfig.layout.castBar.detached_text_pos = val
@@ -1371,7 +1458,7 @@ function optionFuncs.getOptions()
 							min = -150,
 							max = 150,
 							step = 1,
-							show = function() return iTFConfig.layout.castBar.detached end,
+							show = function() return (iTFConfig.layout.castBar.detached and iTFConfig.layout.castBar.enabled)end,
 							set = function(val)
 								iTFConfig.layout.castBar.detached_text_x = val
 								iTF:updateFrames('castbar')
@@ -1385,7 +1472,7 @@ function optionFuncs.getOptions()
 							min = -150,
 							max = 150,
 							step = 1,
-							show = function() return iTFConfig.layout.castBar.detached end,
+							show = function() return (iTFConfig.layout.castBar.detached and iTFConfig.layout.castBar.enabled)end,
 							set = function(val)
 								iTFConfig.layout.castBar.detached_text_y = val
 								iTF:updateFrames('castbar')
@@ -1402,7 +1489,7 @@ function optionFuncs.getOptions()
 								iTF:updateFrames('castbar')
 							end,
 							invertValue = true,
-							show = function() return iTFConfig.layout.castBar.detached end,
+							show = function() return (iTFConfig.layout.castBar.detached and iTFConfig.layout.castBar.enabled)end,
 							get = function()
 								local fonts = LibStub('LibSharedMedia-3.0'):HashTable('font')
 								for k,v in pairs(fonts) do
@@ -1417,7 +1504,7 @@ function optionFuncs.getOptions()
 							name = L.textFlags,
 							type = 'select',
 							order = 14,
-							show = function() return iTFConfig.layout.castBar.detached end,
+							show = function() return (iTFConfig.layout.castBar.detached and iTFConfig.layout.castBar.enabled)end,
 							values = optionFuncs.getValues('textFlags'),
 							set = function(val)
 								if val == 'NONE' then
@@ -1687,6 +1774,7 @@ function optionFuncs.getOptions()
 									name = L.enable,
 									type = 'toggle',
 									order = 1,
+									updateOnClick = true,
 									set = function(val)
 										if val then
 											iTFConfig.layout.icon.durationEnabled = true
@@ -1702,6 +1790,7 @@ function optionFuncs.getOptions()
 									type = 'scrollSelect',
 									order = 2,
 									font = true,
+									show = function() return iTFConfig.layout.icon.durationEnabled end,
 									set = function(val)
 										iTFConfig.layout.icon.durationFont = LibStub('LibSharedMedia-3.0'):Fetch('font', val)
 										iTF:updateFrames('auraText')
@@ -1722,6 +1811,7 @@ function optionFuncs.getOptions()
 									type = 'select',
 									order = 3,
 									values = optionFuncs.getValues('textFlags'),
+									show = function() return iTFConfig.layout.icon.durationEnabled end,
 									set = function(val)
 										if val == 'NONE' then
 											iTFConfig.layout.icon.durationFlags = nil
@@ -1737,6 +1827,7 @@ function optionFuncs.getOptions()
 									type = 'select',
 									order = 4,
 									values = optionFuncs.getValues('all'),
+									show = function() return iTFConfig.layout.icon.durationEnabled end,
 									set = function(val)
 										iTFConfig.layout.icon.durationPos = val
 										iTF:updateFrames('auraText')
@@ -1750,6 +1841,7 @@ function optionFuncs.getOptions()
 									min = -50,
 									max = 50,
 									step = 1,
+									show = function() return iTFConfig.layout.icon.durationEnabled end,
 									set = function(val)
 										iTFConfig.layout.icon.durationX = val
 										iTF:updateFrames('auraText')
@@ -1763,6 +1855,7 @@ function optionFuncs.getOptions()
 									min = -50,
 									max = 50,
 									step = 1,
+									show = function() return iTFConfig.layout.icon.durationEnabled end,
 									set = function(val)
 										iTFConfig.layout.icon.durationY = val
 										iTF:updateFrames('auraText')
@@ -1777,6 +1870,7 @@ function optionFuncs.getOptions()
 									min = 6,
 									max = 60,
 									step = 1,
+									show = function() return iTFConfig.layout.icon.durationEnabled end,
 									set = function(val)
 										iTFConfig.layout.icon.durationSize = val
 										iTF:updateFrames('auraText')
@@ -1790,6 +1884,7 @@ function optionFuncs.getOptions()
 									min = 0,
 									max = 10,
 									step = 5,
+									show = function() return iTFConfig.layout.icon.durationEnabled end,
 									allowDecimals = 2,
 									set = function(val)
 										iTFConfig.layout.icon.durationDecimals = val
@@ -1802,6 +1897,7 @@ function optionFuncs.getOptions()
 									type = 'color',
 									order = 9,
 									hasAlpha = true,
+									show = function() return iTFConfig.layout.icon.durationEnabled end,
 									set = function(r,g,b,a)
 										iTFConfig.layout.colors.text.duration = {r,g,b,a}
 										iTF:updateFrames('auraText')
@@ -1820,6 +1916,7 @@ function optionFuncs.getOptions()
 									name = L.enable,
 									type = 'toggle',
 									order = 1,
+									updateOnClick = true,
 									set = function(val)
 										if val then
 											iTFConfig.layout.icon.stackEnabled = true
@@ -1835,6 +1932,7 @@ function optionFuncs.getOptions()
 									type = 'scrollSelect',
 									order = 2,
 									font = true,
+									show = function() return iTFConfig.layout.icon.stackEnabled end,
 									set = function(val)
 										iTFConfig.layout.icon.stackFont = LibStub('LibSharedMedia-3.0'):Fetch('font', val)
 										iTF:updateFrames('auraText')
@@ -1854,6 +1952,7 @@ function optionFuncs.getOptions()
 									name = L.textFlags,
 									type = 'select',
 									order = 3,
+									show = function() return iTFConfig.layout.icon.stackEnabled end,
 									values = optionFuncs.getValues('textFlags'),
 									set = function(val)
 										if val == 'NONE' then
@@ -1869,6 +1968,7 @@ function optionFuncs.getOptions()
 									name = L.textPos,
 									type = 'select',
 									order = 4,
+									show = function() return iTFConfig.layout.icon.stackEnabled end,
 									values = optionFuncs.getValues('all'),
 									set = function(val)
 										iTFConfig.layout.icon.stackPos = val
@@ -1883,6 +1983,7 @@ function optionFuncs.getOptions()
 									min = -50,
 									max = 50,
 									step = 1,
+									show = function() return iTFConfig.layout.icon.stackEnabled end,
 									set = function(val)
 										iTFConfig.layout.icon.stackX = val
 										iTF:updateFrames('auraText')
@@ -1896,6 +1997,7 @@ function optionFuncs.getOptions()
 									min = -50,
 									max = 50,
 									step = 1,
+									show = function() return iTFConfig.layout.icon.stackEnabled end,
 									set = function(val)
 										iTFConfig.layout.icon.stackY = val
 										iTF:updateFrames('auraText')
@@ -1910,6 +2012,7 @@ function optionFuncs.getOptions()
 									min = 6,
 									max = 60,
 									step = 1,
+									show = function() return iTFConfig.layout.icon.stackEnabled end,
 									set = function(val)
 										iTFConfig.layout.icon.stackSize = val
 										iTF:updateFrames('auraText')
@@ -1921,6 +2024,7 @@ function optionFuncs.getOptions()
 									type = 'color',
 									order = 8,
 									hasAlpha = true,
+									show = function() return iTFConfig.layout.icon.stackEnabled end,
 									set = function(r,g,b,a)
 										iTFConfig.layout.colors.text.stack = {r,g,b,a}
 										iTF:updateFrames('auraText')
@@ -1939,6 +2043,7 @@ function optionFuncs.getOptions()
 									name = L.enable,
 									type = 'toggle',
 									order = 1,
+									updateOnClick = true,
 									set = function(val)
 										if val then
 											iTFConfig.layout.icon.flashEnabled = true
@@ -1956,6 +2061,7 @@ function optionFuncs.getOptions()
 									min = 0,
 									max = 3,
 									allowDecimals = 4,
+									show = function() return iTFConfig.layout.icon.flashEnabled end,
 									set = function(val)
 										iTFConfig.layout.icon.flashSpeed = val
 										iTF:updateFrames('flash')
@@ -1969,6 +2075,7 @@ function optionFuncs.getOptions()
 									min = 0,
 									max = 20,
 									allowDecimals = 2,
+									show = function() return iTFConfig.layout.icon.flashEnabled end,
 									set = function(val)
 										iTFConfig.layout.icon.flashTimer = val
 										iTF:updateFrames('flash')
@@ -1980,6 +2087,7 @@ function optionFuncs.getOptions()
 									type = 'color',
 									order = 4,
 									hasAlpha = true,
+									show = function() return iTFConfig.layout.icon.flashEnabled end,
 									set = function(r,g,b,a)
 										iTFConfig.layout.colors.text.shortDuration = {r,g,b,a}
 										iTF:updateFrames('auraText')
@@ -2151,7 +2259,7 @@ function iTF:toggleConfig(forceHide)
 		local bd = {bgFile = 'Interface\\Buttons\\WHITE8x8',edgeFile = 'Interface\\Buttons\\WHITE8x8',edgeSize = 1,insets = {left = -1,right = -1,top = -1,bottom = -1,}}
 		local width = 600
 		local height = 500
-		local font = 'Fonts\\ARIALN.TTF'
+		local font = NumberFont_Shadow_Small:GetFont()
 		local f = CreateFrame('frame', 'iTFOptions', UIParent)
 		f:SetSize(width,height)
 		f:SetPoint('CENTER', UIParent, 'CENTER', 0,0)
@@ -2908,13 +3016,14 @@ function iTF:toggleConfig(forceHide)
 						f.content[v.type][id].title:SetText(v.name)
 						local function setButtonText()
 							if v.invertValue then
-								local valueToFind = v.get()
-								for key,value in pairs(v.values) do
-									if value == valueToFind then
-										f.content[v.type][id].text:SetText(value)
-										return
-									end
-								end
+								--local valueToFind = v.get()
+								--for key,value in pairs(v.values) do
+								--	if value == valueToFind then
+								--		f.content[v.type][id].text:SetText(value)
+								--		return
+								--	end
+								--end
+								f.content[v.type][id].text:SetText(v.get())
 							else
 								f.content[v.type][id].text:SetText(v.values[v.get()])
 							end
@@ -2927,12 +3036,12 @@ function iTF:toggleConfig(forceHide)
 							f.content.scrollSelectChild[button]:ClearAllPoints()
 							f.content.scrollSelectChild[button]:SetParent(f.content[v.type][id].menu)
 							f.content.scrollSelectChild[button]:SetSize(100, 20)
-							f.content.scrollSelectChild[button].text:SetText(subV)
 							if v.font then
 								f.content.scrollSelectChild[button].text:SetFont(LibStub('LibSharedMedia-3.0'):Fetch('font', subV), 12, 'Outline')
 							else
 								f.content.scrollSelectChild[button].text:SetFont(font, 12, 'Outline')
 							end
+							f.content.scrollSelectChild[button].text:SetText(subV)
 							f.content.scrollSelectChild[button]:SetPoint('TOP', f.content[v.type][id].menu, 'BOTTOM', 0,(i-1)*20)					
 							f.content.scrollSelectChild[button].inUse = 'scrollSelect'
 							f.content.scrollSelectChild[button]:SetScript('OnClick', function()

@@ -204,7 +204,7 @@ function layouts:Default()
 				['receive'] = false, -- Allow CHAT_MSG_ADDON npc additions
 			},			
 		},
-		['colS'] = 5, -- Column size/Rows
+		['colS'] = 2, -- Column size/Rows
 		['colors'] = {
 			['classColor'] = true, --Use class color for players
 			['backdrop'] = {

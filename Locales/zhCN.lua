@@ -1,5 +1,6 @@
 local L = LibStub('AceLocale-3.0'):NewLocale('iTargetingFrames', 'zhCN')
 if not L then return end
+
 L.global = '全局'
 L.globalFont = '全局字体'
 L.globalTexture = '全局材质'

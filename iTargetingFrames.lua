@@ -6,7 +6,7 @@ TO DO LIST:
 --]]
 local _, iTF = ...
 iTF.barTex = 'Interface\\Buttons\\WHITE8x8'
-iTF.font = 'Fonts\\ARIALN.TTF'
+iTF.font = NumberFont_Shadow_Small:GetFont()
 iTF.fontSize = 11
 local L = LibStub('AceLocale-3.0'):GetLocale('iTargetingFrames', true)
 local specID = {
@@ -781,30 +781,35 @@ function iTF:trimText(unitID, cast)
 	end
 end
 function iTF:abbreviate(str)
-	local t = {strsplit(' ', str)}
-	if #t > 1 then
-		str = t[#t]
-		for i = #t-1, 1, -1 do
-			str = string.format('%s. %s', utf8_sub(t[i],1,1), str)
+	if str then
+		local t = {strsplit(' ', str)}
+		if #t > 1 then
+			str = t[#t]
+			for i = #t-1, 1, -1 do
+				str = string.format('%s. %s', utf8_sub(t[i],1,1), str)
+			end
 		end
+		return str
 	end
-	return str
 end
 function iTF:setName(unitID, setIt)
 	local name = UnitName(unitID)
+	if (not name and UnitExists(unitID)) or name == UNKNOWN then
+		if name == UNKNOWN then
+			C_Timer.After(0.2, function()
+				iTF:setName(unitID, true)
+			end)
+		end
+	end
 	if iTFConfig.layout.text.abbreviateNames then
 		name = iTF:abbreviate(name)
 	end
-	if name == UNKNOWN then
-		C_Timer.After(0.2, function()
-			iTF:setName(unitID, true)
-		end)
-	end
+
 	if setIt then
 		iTF.frames[unitID].unitName = UnitName(unitID)
 		iTF.frames[unitID].customData.name = UnitName(unitID)
 	end
-	iTF.frames[unitID].text:SetText(name)
+	iTF.frames[unitID].text:SetText(name or UNKNOWN)
 	iTF:trimText(unitID)
 end
 function iTF:testMode(start)
@@ -1160,6 +1165,9 @@ function iTF:updateRaidIcon(unitID)
 end
 function iTF:updateUnitID(unitID)
 	iTF:hideAll(unitID)
+	if not UnitExists(unitID) then
+		return
+	end
 	iTF.frames[unitID].unitName = UnitName(unitID) or UNKNOWN
 	iTF.frames[unitID].guid = UnitGUID(unitID) or '0'
 	local unitType, _, serverID, instanceID, zoneID, npcID, spawnID = strsplit("-", iTF.frames[unitID].guid)

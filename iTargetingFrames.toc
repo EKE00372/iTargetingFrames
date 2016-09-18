@@ -2,10 +2,10 @@
 ## Title: iTargetingFrames
 ## Notes: iTargetingFrames
 ## Author: Ironi
-## Version: 0.82
+## Version: 0.9
 ## DefaultState: enabled
 ## SavedVariables: iTFConfig
-## X-Curse-Packaged-Version: v0.8-12-g8480174
+## X-Curse-Packaged-Version: v0.9-1-g6806144
 ## X-Curse-Project-Name: iTargetingFrames
 ## X-Curse-Project-ID: itargetingframes
 ## X-Curse-Repository-ID: wow/itargetingframes/mainline

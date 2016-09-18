@@ -49,7 +49,7 @@ function layouts:Default()
 			['width'] = 24, --Aura icon width
 			['height'] = 24, --Aura icon height
 			['pos'] = 'LEFT', --Aura icon anchor
-			['max'] = 4, --Max number of auras shown
+			['max'] = 3, --Max number of auras shown
 			['grow'] = 'LEFT', --Grow anchor (TOP/BOTTOM/LEFT/RIGHT), LEFT = Right, TOP = bottom etc
 			['x'] = 1, --Aura icon horizontal position
 			['y'] = 1, --Aura icon vertical position
